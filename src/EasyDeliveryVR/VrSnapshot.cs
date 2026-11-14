@@ -31,6 +31,25 @@ namespace EasyDeliveryVR
 
         private float _nextCmdCheck;
 
+        private static void DumpTree(string label, Transform root)
+        {
+            if (root == null) { Plugin.Log.LogInfo($"VR {label}: none"); return; }
+            Plugin.Log.LogInfo($"VR {label}: parent path '{TPath(root.parent)}'");
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                var r = t.GetComponent<Renderer>();
+                string info = "";
+                if (r is SkinnedMeshRenderer smr)
+                    info = $" SKINNED mesh={smr.sharedMesh?.name} bones={smr.bones?.Length} rootBone={smr.rootBone?.name}";
+                else if (r != null)
+                    info = $" {r.GetType().Name} mesh={t.GetComponent<MeshFilter>()?.sharedMesh?.name} bounds={r.bounds.size}";
+                if (r != null) info += $" mat={r.sharedMaterial?.name}/{r.sharedMaterial?.shader.name} enabled={r.enabled}";
+                Plugin.Log.LogInfo($"VR {label}:  {TPath(t)} active={t.gameObject.activeInHierarchy} lpos={t.localPosition} lrot={t.localEulerAngles} lscale={t.localScale}{info}");
+            }
+        }
+
+        private static string TPath(Transform t) => t == null ? "" : (t.parent == null ? t.name : TPath(t.parent) + "/" + t.name);
+
         /// <summary>Logs every shader used by active renderers, with its properties and a sample object.</summary>
         private static void DumpShaders()
         {
@@ -73,9 +92,41 @@ namespace EasyDeliveryVR
             {
                 var cmd = raw.Trim().ToLowerInvariant();
                 Plugin.Log.LogInfo("VR debug command: " + cmd);
+                try { RunCommand(cmd); }
+                catch (System.Exception e) { Plugin.Log.LogError($"VR debug command '{cmd}' failed: {e}"); }
+            }
+        }
+
+        private void RunCommand(string cmd)
+        {
+            {
                 if (cmd == "snapshot") Take("cmd");
                 else if (cmd == "settings") Ui.VrSettingsMenu.Toggle();
                 else if (cmd == "shaders") DumpShaders();
+                else if (cmd == "continue") // title screen "continue"
+                {
+                    var intro = FindFirstObjectByType<IntroDotExe>(FindObjectsInactive.Include);
+                    Plugin.Log.LogInfo("VR: continue -> " + (intro ? intro.name : "no IntroDotExe"));
+                    if (intro)
+                    {
+                        // Same as IntroDotExe.LoadDelivery, without the fade (SceneTransition isn't always set up here).
+                        int scene = sSaveSystem.GetInt("deliveryCurrentLastMapBuildIndex", intro.deliverySceneIndex);
+                        sSaveSystem.SetBool("deliveryLoadedFromMenu", data: true);
+                        if (PauseSystem.paused) PauseSystem.pauseSystem.TogglePaused();
+                        Plugin.Log.LogInfo($"VR: continue loads scene {scene} ({SceneUtility.GetScenePathByBuildIndex(scene)}), current {SceneManager.GetActiveScene().buildIndex}");
+                        SceneManager.LoadScene(scene);
+                    }
+                }
+                else if (cmd == "hands")
+                {
+                    foreach (var ii in FindObjectsByType<InteriorInteraction>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                        DumpTree("cab hand", ii.hand);
+                    foreach (var ph in FindObjectsByType<sPlayerHands>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    {
+                        DumpTree("player left", ph.leftHand ? ph.leftHand.transform : null);
+                        DumpTree("player right", ph.rightHand ? ph.rightHand.transform : null);
+                    }
+                }
                 else if (cmd == "nav")
                 {
                     var jb = FindFirstObjectByType<jobBoard>();
