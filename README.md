@@ -1,6 +1,6 @@
 # Easy Delivery Co VR
 
-A free, unofficial VR mod for Easy Delivery Co. Made for Quest 2 (Steam Link, Virtual Desktop) and Steam Frame.
+A free, unofficial PC VR mod for Easy Delivery Co. Runs through SteamVR (OpenXR) with any SteamVR headset.
 
 ## Features
 
@@ -16,7 +16,7 @@ A free, unofficial VR mod for Easy Delivery Co. Made for Quest 2 (Steam Link, Vi
 1. Download `EasyDeliveryVR-vX.Y.Z.zip` from the [releases](../../releases).
 2. Unzip it into the game folder, next to `EasyDeliveryCo.exe` (Steam: right-click the game > Manage > Browse local
    files). It includes BepInEx 5 and Unity's OpenXR runtime files, so nothing else is needed.
-3. Start SteamVR (Steam Link) or Virtual Desktop, then start the game.
+3. Start SteamVR with your headset connected, then start the game.
 
 To play flat again, set `EnableVR = false` in `BepInEx\config\easydeliveryvr.cfg`.
 
@@ -31,7 +31,7 @@ To play flat again, set `EnableVR = false` in `BepInEx\config\easydeliveryvr.cfg
 | Y: tap / hold 1 s | Job selection / **VR settings panel** |
 | Click both sticks together | Pause (also leaves the camera mode from the computer's cam.exe) |
 | B (in cam.exe camera mode) | Back to the game |
-| Left menu button: tap / hold 1 s | Pause / VR settings panel (if the runtime passes the button to the game; Steam Link doesn't) |
+| Left menu button: tap / hold 1 s | Pause / VR settings panel (if your SteamVR setup passes the button to the game; many don't) |
 | Grip near the steering wheel | Grab the wheel and steer with your hands (one or both) |
 | Grip near a package / door / truck bed / item (first person on foot) | Pick up, get in, open, use; grip again while carrying = put the package down where your hand is |
 | Right grip (away from wheel) | Horn |
@@ -68,7 +68,7 @@ Set `EnableVR = false` in `BepInEx\config\easydeliveryvr.cfg` to play flat.
    ```
    ./tools/Install-XrRuntime.ps1
    ```
-4. Start SteamVR (Steam Link) or Virtual Desktop, then launch the game.
+4. Start SteamVR, then launch the game.
 
 ### Making a release
 

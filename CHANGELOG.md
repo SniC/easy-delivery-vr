@@ -8,7 +8,7 @@ GitHub release notes, so add a section here before releasing.
 First release.
 
 **VR**
-- Stereo VR with head tracking through OpenXR (SteamVR / Steam Link, Virtual Desktop). Made for Quest 2 (Steam Link, Virtual Desktop) and Steam Frame (Steam Link).
+- PC VR through SteamVR (OpenXR): stereo view with head tracking, for any SteamVR headset.
 - Recenter any time: hold the right stick click.
 - Play flat again with `EnableVR = false` in `BepInEx\config\easydeliveryvr.cfg`.
 
@@ -28,7 +28,7 @@ First release.
 **Menus and HUD**
 - Menus, map and the computer on a screen in front of you, or on your left hand like a tablet in first person; point and click with the right hand's laser.
 - Drop-off markers and labels line up with the world.
-- Pause by clicking both sticks (Steam Link keeps the menu button for itself).
+- Pause by clicking both sticks (many SteamVR setups keep the menu button for themselves).
 - The controls screen shows the Touch controller buttons.
 - Conversation text comes closer so it isn't behind the person you talk to.
 

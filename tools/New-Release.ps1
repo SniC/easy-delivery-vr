@@ -107,8 +107,7 @@ try {
 Easy Delivery VR $tag
 =====================
 
-VR mod for Easy Delivery Co (BepInEx 5 + Unity OpenXR). Tested with Quest 2 via Steam Link and
-Virtual Desktop, and Steam Frame via Steam Link.
+PC VR mod for Easy Delivery Co (BepInEx 5 + Unity OpenXR), for any SteamVR headset.
 
 Install
 -------
@@ -120,7 +119,7 @@ Install
      EasyDeliveryCo_Data\Plugins\x86_64\       UnityOpenXR.dll, openxr_loader.dll
      EasyDeliveryCo_Data\UnitySubsystems\      OpenXR subsystem manifest
    Already using BepInEx 5 for other mods? Overwriting with this version is fine.
-2. Start SteamVR (Steam Link) or Virtual Desktop (OpenXR runtime), then start the game.
+2. Start SteamVR with your headset connected, then start the game.
    The first start takes a little longer while BepInEx sets itself up.
 
 To play flat again, set EnableVR = false in BepInEx\config\easydeliveryvr.cfg (created on the first start).
@@ -169,7 +168,7 @@ Easy Delivery Co is not included and is (c) its developers. This mod is unoffici
 ## Install
 
 1. Download **EasyDeliveryVR-$tag.zip** below and unzip it into the Easy Delivery Co folder, next to ``EasyDeliveryCo.exe`` (Steam: right-click the game > Manage > Browse local files). It includes [BepInEx](https://github.com/BepInEx/BepInEx) $bepVersion, so nothing else is needed.
-2. Start SteamVR (Steam Link) or Virtual Desktop, then start the game.
+2. Start SteamVR with your headset connected, then start the game.
 
 Hold **Y** in game for the VR settings. Full controls are in ``INSTALL.txt`` in the zip. To play flat again, set ``EnableVR = false`` in ``BepInEx\config\easydeliveryvr.cfg``.
 
