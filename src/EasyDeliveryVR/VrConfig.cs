@@ -31,7 +31,7 @@ namespace EasyDeliveryVR
         public static ConfigEntry<bool> DashboardHud;
         public static ConfigEntry<bool> MenuOnHand;
         public static ConfigEntry<float> DashboardHeight;
-        public static ConfigEntry<float> ClusterX, ClusterY, ClusterSize, CenterX, CenterY, CenterSize;
+        public static ConfigEntry<float> ClusterX, ClusterY, ClusterSize, ClusterTilt, CenterX, CenterY, CenterSize, MoneyX, MoneyY, MoneySize;
 
         public static void Bind(ConfigFile cfg)
         {
@@ -74,9 +74,13 @@ namespace EasyDeliveryVR
             ClusterX = cfg.Bind("UI", "WheelScreenRight", 0f, "Screen behind the wheel (fuel, time): move right in meters (negative = left).");
             ClusterY = cfg.Bind("UI", "WheelScreenUp", 0f, "Screen behind the wheel: move up in meters (negative = down).");
             ClusterSize = cfg.Bind("UI", "WheelScreenSize", 1f, "Screen behind the wheel: size multiplier.");
-            CenterX = cfg.Bind("UI", "CenterScreenRight", 0f, "Center dashboard screen (radio, money, distance): move right in meters.");
-            CenterY = cfg.Bind("UI", "CenterScreenUp", 0f, "Center dashboard screen: move up in meters.");
-            CenterSize = cfg.Bind("UI", "CenterScreenSize", 1f, "Center dashboard screen: size multiplier.");
+            ClusterTilt = cfg.Bind("UI", "WheelScreenTilt", 0f, "Screen behind the wheel: tilt in degrees (positive = top toward you).");
+            CenterX = cfg.Bind("UI", "CenterScreenRight", 0f, "Radio screen (center of the dashboard): move right in meters.");
+            CenterY = cfg.Bind("UI", "CenterScreenUp", 0f, "Radio screen: move up in meters.");
+            CenterSize = cfg.Bind("UI", "CenterScreenSize", 1f, "Radio screen: size multiplier.");
+            MoneyX = cfg.Bind("UI", "MoneyScreenRight", 0f, "Money / distance screen (below the radio by default): move right in meters.");
+            MoneyY = cfg.Bind("UI", "MoneyScreenUp", 0f, "Money / distance screen: move up in meters.");
+            MoneySize = cfg.Bind("UI", "MoneyScreenSize", 1f, "Money / distance screen: size multiplier.");
             ScreenDistance = cfg.Bind("UI", "ScreenDistance", 2.0f, "Distance in meters of the virtual screen showing HUD and menus.");
             ScreenFov = cfg.Bind("UI", "ScreenFov", 50f, "Vertical size in degrees of the virtual screen showing HUD and menus.");
             LaserPitch = cfg.Bind("UI", "LaserPitch", 30f,

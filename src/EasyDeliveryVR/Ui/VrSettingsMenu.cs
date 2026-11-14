@@ -92,9 +92,13 @@ namespace EasyDeliveryVR.Ui
             AddChoice("  Wheel screen left/right", VrConfig.ClusterX, cm, fmtCm);
             AddChoice("  Wheel screen up/down", VrConfig.ClusterY, cm, fmtCm);
             AddChoice("  Wheel screen size", VrConfig.ClusterSize, sizes, fmtSize);
-            AddChoice("  Center screen left/right", VrConfig.CenterX, cm, fmtCm);
-            AddChoice("  Center screen up/down", VrConfig.CenterY, cm, fmtCm);
-            AddChoice("  Center screen size", VrConfig.CenterSize, sizes, fmtSize);
+            AddChoice("  Wheel screen tilt", VrConfig.ClusterTilt, Steps(-60f, 60f, 5f), v => $"{v:+0;-0;0}°");
+            AddChoice("  Radio screen left/right", VrConfig.CenterX, cm, fmtCm);
+            AddChoice("  Radio screen up/down", VrConfig.CenterY, cm, fmtCm);
+            AddChoice("  Radio screen size", VrConfig.CenterSize, sizes, fmtSize);
+            AddChoice("  Money screen left/right", VrConfig.MoneyX, cm, fmtCm);
+            AddChoice("  Money screen up/down", VrConfig.MoneyY, cm, fmtCm);
+            AddChoice("  Money screen size", VrConfig.MoneySize, sizes, fmtSize);
             AddBool("Show hands", VrConfig.ShowHands, "On", "Off");
             AddBool("Grab things by hand (on foot)", VrConfig.HandGrab, "On", "Off");
             AddBool("Camera shake", VrConfig.DisableCameraShake, "Off", "On");

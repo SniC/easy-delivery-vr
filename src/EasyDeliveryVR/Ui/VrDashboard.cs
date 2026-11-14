@@ -29,7 +29,9 @@ namespace EasyDeliveryVR.Ui
         private float _nextSearch;
 
         private Transform _root;
-        private Renderer _gauges, _radio;
+        private Renderer _gauges, _radio, _money;
+        private Mesh _moneyMesh;
+        private float _moneyBelowRadio; // default offset of the money screen (meters, in the radio's plane)
         private Material _mat;
         private Mesh _gaugeMesh, _radioMesh, _holedMesh, _originalMesh;
         private Vector2Int _meshSize;
@@ -151,17 +153,19 @@ namespace EasyDeliveryVR.Ui
                 ComputePlacement();
             }
 
-            for (int i = 0; i < 2; i++)
-            {
-                var t = (i == 0 ? _gauges : _radio).transform;
-                // The player's own adjustments (VR settings), in the screen's plane: right / up and size.
-                var offset = i == 0 ? new Vector3(VrConfig.ClusterX.Value, VrConfig.ClusterY.Value, 0f)
-                                    : new Vector3(VrConfig.CenterX.Value, VrConfig.CenterY.Value, 0f);
-                float size = Mathf.Clamp(i == 0 ? VrConfig.ClusterSize.Value : VrConfig.CenterSize.Value, 0.25f, 4f);
-                var rot = basis.rotation * _local[i].rotation;
-                t.SetPositionAndRotation(basis.TransformPoint(_local[i].position) + rot * offset, rot);
-                t.localScale = Vector3.one * size;
-            }
+            // The player's own adjustments (VR settings), in each screen's plane: right / up, size, (wheel) tilt.
+            PlaceScreen(_gauges.transform, basis, _local[0], VrConfig.ClusterX.Value, VrConfig.ClusterY.Value, VrConfig.ClusterSize.Value, VrConfig.ClusterTilt.Value);
+            PlaceScreen(_radio.transform, basis, _local[1], VrConfig.CenterX.Value, VrConfig.CenterY.Value, VrConfig.CenterSize.Value, 0f);
+            PlaceScreen(_money.transform, basis, _local[1], VrConfig.MoneyX.Value, VrConfig.MoneyY.Value + _moneyBelowRadio, VrConfig.MoneySize.Value, 0f);
+        }
+
+        private static void PlaceScreen(Transform t, Transform basis, Pose local, float right, float up, float size, float tilt)
+        {
+            var rot = basis.rotation * local.rotation;
+            var pos = basis.TransformPoint(local.position) + rot * new Vector3(right, up, 0f);
+            // Tilt around the screen's horizontal axis: positive leans the top toward the driver.
+            t.SetPositionAndRotation(pos, rot * Quaternion.Euler(-tilt, 0f, 0f));
+            t.localScale = Vector3.one * Mathf.Clamp(size, 0.25f, 4f);
         }
 
         private void FindDashboard()
@@ -356,6 +360,7 @@ namespace EasyDeliveryVR.Ui
             _mat = new Material(Shader.Find("Sprites/Default"));
             _gauges = MakePanel("Gauges");
             _radio = MakePanel("Radio");
+            _money = MakePanel("Money");
         }
 
         private Renderer MakePanel(string name)
@@ -395,12 +400,12 @@ namespace EasyDeliveryVR.Ui
             SetPanel(_gauges, ref _gaugeMesh, w, h, 0.0008f,
                 new Part(bars, 0, 0), new Part(time, bars.width + 6, bars.height - time.height));
 
-            // Center of the dashboard (big):
+            // Center of the dashboard (big), two screens the player can move separately:
             //   [radio: scan / fm / song]
-            //   [money]  [distance      ]
-            float row2 = radio.height + 6;
-            SetPanel(_radio, ref _radioMesh, w, h, BigMetersPerPixel,
-                new Part(radio, 0, 0), new Part(money, 0, row2), new Part(distance, money.width + 6, row2));
+            //   [money]  [distance      ]   (by default just below the radio)
+            SetPanel(_radio, ref _radioMesh, w, h, BigMetersPerPixel, new Part(radio, 0, 0));
+            SetPanel(_money, ref _moneyMesh, w, h, BigMetersPerPixel, new Part(money, 0, 0), new Part(distance, money.width + 6, 0));
+            _moneyBelowRadio = -(radio.height / 2f + 6f + distance.height / 2f) * BigMetersPerPixel;
 
             _holedMesh = HoledQuad(new[] { Uv(bars, w, h), Uv(distance, w, h), Uv(money, w, h), Uv(time, w, h), Uv(radio, w, h) });
         }
