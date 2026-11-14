@@ -82,6 +82,7 @@ namespace EasyDeliveryVR.Ui
             AddChoice("Vibration", VrConfig.HapticStrength, new[] { 0f, 0.5f, 1f, 1.5f, 2f }, v => v <= 0f ? "Off" : $"{v * 100:F0}%");
             AddChoice("Menu/HUD distance", VrConfig.ScreenDistance, new[] { 1.25f, 1.5f, 2f, 2.5f, 3f }, v => $"{v:0.##} m");
             AddChoice("Menu/HUD size", VrConfig.ScreenFov, new[] { 35f, 40f, 45f, 50f, 60f }, v => $"{v:F0}°");
+            AddBool("Menu screen on left hand", VrConfig.MenuOnHand, "On (first person)", "Off (floating)");
             AddBool("Truck info on dashboard", VrConfig.DashboardHud, "On", "Off (floating HUD)");
             AddChoice("Dashboard display height", VrConfig.DashboardHeight, Steps(-0.2f, 0.2f, 0.02f), v => $"{v * 100:+0;-0;0} cm");
             AddBool("Show hands", VrConfig.ShowHands, "On", "Off");
@@ -215,8 +216,8 @@ namespace EasyDeliveryVR.Ui
             var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);
             Destroy(bg.GetComponent<Collider>());
             bg.transform.SetParent(_panel, false);
-            bg.transform.localPosition = new Vector3(0f, -0.065f, 0.002f);
-            bg.transform.localScale = new Vector3(0.92f, 0.8f, 1f);
+            bg.transform.localPosition = new Vector3(0f, -0.095f, 0.002f);
+            bg.transform.localScale = new Vector3(0.92f, 0.86f, 1f);
             var bgMat = new Material(Shader.Find("Sprites/Default")) { color = new Color(0.05f, 0.05f, 0.06f, 0.96f), renderQueue = 4700 };
             bg.GetComponent<Renderer>().sharedMaterial = bgMat;
 

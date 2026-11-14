@@ -75,7 +75,8 @@ namespace EasyDeliveryVR.Motion
         }
 
         private bool ShowHands =>
-            XrRuntime.Running && VrConfig.ShowHands.Value && !PauseSystem.paused &&
+            XrRuntime.Running && VrConfig.ShowHands.Value && // also while paused: the menu screen sits on the left hand
+
             (VrCameraManager.Mode == VrCameraManager.ViewMode.Cab || VrCameraManager.Mode == VrCameraManager.ViewMode.OnFoot);
 
         private void Update()

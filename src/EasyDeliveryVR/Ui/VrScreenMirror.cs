@@ -208,6 +208,7 @@ namespace EasyDeliveryVR.Ui
                 _root.localRotation = Quaternion.identity;
             else
                 _root.rotation = VrCameraManager.AnchorRotation;
+            PlaceOnHand();
         }
 
         private void Sync()
@@ -260,6 +261,49 @@ namespace EasyDeliveryVR.Ui
                     ts.flipY = ss.flipY;
                 }
             }
+
+            // First person: the menu / computer screen sits on the left hand like a tablet (pointer stays on the right).
+            _onHand = null;
+            var menu = VrLaser.ScreenQuad;
+            bool firstPerson = VrCameraManager.Mode == VrCameraManager.ViewMode.Cab || VrCameraManager.Mode == VrCameraManager.ViewMode.OnFoot;
+            if (VrConfig.MenuOnHand.Value && firstPerson && menu != null && menu.TryGetComponent<Renderer>(out var mr) && mr.enabled)
+            {
+                _onHand = menu;
+                var s = menu.localScale;
+                _onHandScale = new Vector3(HandScreenWidth, HandScreenWidth * Mathf.Abs(s.y / (s.x == 0f ? 1f : s.x)), 1f);
+                // The full-view dimming backdrops make no sense behind a hand-held screen.
+                foreach (var c in _copies.Values)
+                    if (c.Target is SpriteRenderer) c.Target.enabled = false;
+                PlaceOnHand();
+            }
+        }
+
+        private const float HandScreenWidth = 0.3f;
+        private Transform _onHand;
+        private Vector3 _onHandScale;
+
+        /// <summary>Above the left controller, facing the head. Runs again right before rendering with the latest pose.</summary>
+        private void PlaceOnHand()
+        {
+            if (_onHand == null) return;
+            var d = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.LeftHand);
+            if (!d.isValid
+                || !d.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out var p)
+                || !d.TryGetFeatureValue(UnityEngine.XR.CommonUsages.deviceRotation, out var r)
+                || !VrCameraManager.TrackingToWorld(p, r, out var handPos, out var handRot))
+                return;
+            var head = Camera.main != null ? Camera.main.transform.position : handPos - handRot * Vector3.forward;
+            foreach (var c in Camera.allCameras)
+                if (c.stereoTargetEye == StereoTargetEyeMask.Both && c.targetTexture == null) { head = c.transform.position; break; }
+
+            // Hold it like a tablet: just above and in front of the hand, turned toward the eyes.
+            var up = (VrCameraManager.Anchor != null ? VrCameraManager.AnchorRotation : Quaternion.identity) * Vector3.up;
+            var pos = handPos + up * (_onHandScale.y * 0.5f + 0.04f) + handRot * Vector3.forward * 0.04f;
+            var look = pos - head;
+            if (look.sqrMagnitude < 1e-4f) return;
+            _onHand.SetPositionAndRotation(pos, Quaternion.LookRotation(look, up));
+            var ps = _onHand.parent != null ? _onHand.parent.lossyScale : Vector3.one; // the anchor may be scaled (truck)
+            _onHand.localScale = new Vector3(_onHandScale.x / ps.x, _onHandScale.y / ps.y, 1f);
         }
 
         /// <summary>Material copies so we can draw on top of the world without touching the monitor's materials.</summary>

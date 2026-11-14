@@ -29,6 +29,7 @@ namespace EasyDeliveryVR
         public static ConfigEntry<float> Vignette;
         public static ConfigEntry<bool> RetroVertexSnap;
         public static ConfigEntry<bool> DashboardHud;
+        public static ConfigEntry<bool> MenuOnHand;
         public static ConfigEntry<float> DashboardHeight;
 
         public static void Bind(ConfigFile cfg)
@@ -66,6 +67,8 @@ namespace EasyDeliveryVR
                 "Keep the game's retro vertex snapping (models snap to a 2 cm grid). In VR this makes nearby objects jump with every head/hand movement.");
             DashboardHud = cfg.Bind("UI", "DashboardHud", true,
                 "In the cab, show fuel, energy, money, time and the radio on a display above the steering wheel instead of on the floating HUD.");
+            MenuOnHand = cfg.Bind("UI", "MenuOnHand", true,
+                "In first person (cab and on foot), show the menu / computer screen on your left hand like a tablet; point at it with the right hand.");
             DashboardHeight = cfg.Bind("UI", "DashboardHeight", 0f, "Extra height in meters of the dashboard display (negative = lower).");
             ScreenDistance = cfg.Bind("UI", "ScreenDistance", 2.0f, "Distance in meters of the virtual screen showing HUD and menus.");
             ScreenFov = cfg.Bind("UI", "ScreenFov", 50f, "Vertical size in degrees of the virtual screen showing HUD and menus.");
