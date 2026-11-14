@@ -53,7 +53,8 @@ can't build it). With the XR runtime installed (step 3 above) and the GitHub CLI
 ./tools/New-Release.ps1 -Version 0.2.0 -Draft     # publish as a draft release
 ```
 
-The release notes contain the install steps and the commits since the previous release.
+The release notes contain the install steps and the version's section of [CHANGELOG.md](CHANGELOG.md), written for
+players. Add that section before releasing; the script stops if it's missing.
 
 ## VR controls
 

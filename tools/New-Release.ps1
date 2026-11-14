@@ -15,7 +15,7 @@
          INSTALL.txt, THIRD-PARTY-NOTICES.txt
        The Unity OpenXR files are taken from the game install (put there by Install-XrRuntime.ps1).
     4. Pushes main and the tag, then creates the GitHub release with install instructions and the
-       changes since the previous release.
+       this version's section of CHANGELOG.md (required: write it before releasing).
 
 .EXAMPLE
   ./tools/New-Release.ps1 -Version 0.2.0
@@ -56,7 +56,11 @@ try {
                    (Join-Path $data "UnitySubsystems\UnityOpenXR")) {
         if (-not (Test-Path $p)) { throw "Missing $p. Run tools/Install-XrRuntime.ps1 first." }
     }
-    $previous = (& $git describe --tags --abbrev=0 2>$null)
+    # Player-facing notes for this version, from CHANGELOG.md ("## vX.Y.Z" up to the next "## ").
+    $changelog = Get-Content (Join-Path $repo "CHANGELOG.md") -Raw
+    $m = [regex]::Match($changelog, '(?ms)^## ' + [regex]::Escape($tag) + '[ \t]*\r?$(.*?)(?=^## |\z)')
+    if (-not $m.Success -or -not $m.Groups[1].Value.Trim()) { throw "CHANGELOG.md has no '## $tag' section; add the release notes there first." }
+    $changes = $m.Groups[1].Value.Trim()
 
     # ---- Version ----
     $pluginCs = "src\EasyDeliveryVR\Plugin.cs"
@@ -91,7 +95,7 @@ try {
     # Not config, cache, logs or other plugins.
     $bepCore = Join-Path $GameDir "BepInEx\core"
     $bepVersion = (Get-Item (Join-Path $bepCore "BepInEx.dll")).VersionInfo.FileVersion
-    foreach ($f in "winhttp.dll", "doorstop_config.ini", ".doorstop_version", "changelog.txt") {
+    foreach ($f in "winhttp.dll", "doorstop_config.ini", ".doorstop_version") { # not BepInEx's own changelog.txt
         $src = Join-Path $GameDir $f
         if (-not (Test-Path $src)) { throw "Missing BepInEx file $src" }
         Copy-Item $src $stage -Force
@@ -160,8 +164,6 @@ Easy Delivery Co is not included and is (c) its developers. This mod is unoffici
     Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip
 
     # ---- Release notes ----
-    $range = if ($previous) { "$previous..HEAD" } else { "HEAD" }
-    $changes = & $git log $range --no-merges --format="- %s" | Where-Object { $_ -notmatch '^- Release v' }
     $notes = Join-Path $out "notes-$tag.md"
     @"
 ## Install
@@ -171,9 +173,9 @@ Easy Delivery Co is not included and is (c) its developers. This mod is unoffici
 
 Hold **Y** in game for the VR settings. Full controls are in ``INSTALL.txt`` in the zip. To play flat again, set ``EnableVR = false`` in ``BepInEx\config\easydeliveryvr.cfg``.
 
-## Changes$(if ($previous) { " since $previous" })
+## What's new
 
-$($changes -join "`n")
+$changes
 "@ | Set-Content $notes
 
     Write-Host "Package: $zip ($([math]::Round((Get-Item $zip).Length / 1KB)) KB)"
