@@ -1,0 +1,48 @@
+# --- Build output ---
+bin/
+obj/
+out/
+dist/
+*.zip
+
+# --- IDEs ---
+.vs/
+*.user
+*.suo
+*.userprefs
+.idea/
+*.sln.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# --- Game / Unity references (copyrighted, never commit) ---
+# Reference DLLs from the local game install instead.
+lib/
+refs/
+Managed/
+EasyDeliveryCo_Data/
+
+# --- Mod loader installs ---
+BepInEx/
+MelonLoader/
+doorstop_config.ini
+winhttp.dll
+version.dll
+
+# --- Decompiler / debug exports ---
+decompiled/
+*.pdb
+*.mdb
+
+# --- Local overrides ---
+*.local.props
+Directory.Build.local.props
+.env
+
+# --- OS junk ---
+Thumbs.db
+desktop.ini
+.DS_Store
