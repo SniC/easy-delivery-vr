@@ -104,7 +104,7 @@ namespace EasyDeliveryVR.Ui
         private Transform _dash;
         private Vector3[] _dashVerts;
         private int[] _dashTris;
-        private float _nextPlace;
+        private Vector3 _placedEye;
         private float _placedHeight = float.NaN;
         private readonly Pose[] _local = new Pose[2]; // panel poses in the dashboard's local space
         private bool _placed;
@@ -117,14 +117,17 @@ namespace EasyDeliveryVR.Ui
         private void Place()
         {
             if (_dash == null) FindDashboard();
-            if (!_placed || Time.unscaledTime >= _nextPlace || _placedHeight != VrConfig.DashboardHeight.Value)
+            var basis = _dash != null ? _dash : _wheel.transform;
+
+            // Placement is fixed to the dashboard; redo it only when the seat (eye) or the height setting changes.
+            var eyeLocal = VrCameraManager.Anchor != null ? basis.InverseTransformPoint(VrCameraManager.Anchor.position) : Vector3.zero;
+            if (!_placed || _placedHeight != VrConfig.DashboardHeight.Value || (eyeLocal - _placedEye).sqrMagnitude > 0.05f * 0.05f)
             {
-                _nextPlace = Time.unscaledTime + 2f;
                 _placedHeight = VrConfig.DashboardHeight.Value;
+                _placedEye = eyeLocal;
                 ComputePlacement();
             }
 
-            var basis = _dash != null ? _dash : _wheel.transform;
             for (int i = 0; i < 2; i++)
             {
                 var t = (i == 0 ? _gauges : _radio).transform;
@@ -219,8 +222,15 @@ namespace EasyDeliveryVR.Ui
             var up = car.up;
             float h = VrConfig.DashboardHeight.Value;
 
-            float radius = 0.2f;
-            foreach (var r in wt.GetComponentsInChildren<Renderer>()) radius = Mathf.Max(radius, Mathf.Min(0.3f, r.bounds.extents.y));
+            // Wheel radius from its meshes' local bounds (world bounds change as the wheel turns). Axis = wt.up.
+            float radius = 0f;
+            foreach (var mf in wt.GetComponentsInChildren<MeshFilter>())
+                if (mf.sharedMesh != null)
+                {
+                    var e = mf.sharedMesh.bounds.extents;
+                    radius = Mathf.Max(radius, Mathf.Max(e.x, e.z) * mf.transform.lossyScale.x);
+                }
+            radius = radius < 0.1f || radius > 0.35f ? 0.2f : radius;
 
             // Gauges: looking through the upper half of the wheel. Radio: the dash's center, at the same height.
             var gaugeAim = wt.position + up * (radius * 0.55f + h);
@@ -243,8 +253,11 @@ namespace EasyDeliveryVR.Ui
                     pos = aim; // fallback: hang where we aimed, facing the driver
                     normal = (eye - aim).normalized;
                 }
-                var panelUp = Vector3.ProjectOnPlane(up, normal);
-                if (panelUp.sqrMagnitude < 1e-4f) panelUp = Vector3.ProjectOnPlane(car.forward, normal);
+                // Screen "up": the truck's up on an upright surface, the far edge (away from the driver) on a flat one.
+                // Both terms point the same way on a sloped surface, so this never flips.
+                var view = (pos - eye).normalized;
+                var panelUp = Vector3.ProjectOnPlane(up + view, normal);
+                if (panelUp.sqrMagnitude < 1e-4f) panelUp = Vector3.ProjectOnPlane(up, normal);
                 var rot = Quaternion.LookRotation(-normal, panelUp.normalized); // +z into the dashboard, mesh faces the driver
                 _local[i] = new Pose(basis.InverseTransformPoint(pos), Quaternion.Inverse(basis.rotation) * rot);
             }
