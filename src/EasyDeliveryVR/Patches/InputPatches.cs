@@ -33,6 +33,7 @@ namespace EasyDeliveryVR.Patches
             VrControllers.Update();
             if (sInputManager.players == null || sInputManager.players.Length == 0 || sInputManager.players[0] != __instance) return;
             if (!VrControllers.AnyValid) return;
+            if (Ui.VrSettingsMenu.IsOpen) return; // controllers drive the settings panel, not the game
             try { Merge(__instance); }
             finally { DebugLog(__instance); }
         }
@@ -78,7 +79,7 @@ namespace EasyDeliveryVR.Patches
             __instance.inventoryReleased |= VrControllers.Pressed(pL.Primary, L.Primary);
             __instance.inventoryHeld |= L.Primary;
             __instance.mapPressed |= VrControllers.Pressed(L.Secondary, pL.Secondary);
-            __instance.pausePressed |= VrControllers.Pressed(L.Menu, pL.Menu);
+            __instance.pausePressed |= VrControllers.MenuTapped; // on release; holding opens the VR settings instead
             // Grips grab the steering wheel when a hand is on or near it; otherwise horn (right) / radio (left).
             if (!Motion.VrHands.RightBusy)
                 __instance.hornPressed |= VrControllers.Pressed(R.GripButton, pR.GripButton);
@@ -95,7 +96,7 @@ namespace EasyDeliveryVR.Patches
         {
             if (!XrRuntime.Running || sInputManager.players == null || sInputManager.players[0] != __instance) return;
             VrControllers.Update();
-            if (!VrControllers.AnyValid) return;
+            if (!VrControllers.AnyValid || Ui.VrSettingsMenu.IsOpen) return;
 
             var L = VrControllers.Left;
             var R = VrControllers.Right;

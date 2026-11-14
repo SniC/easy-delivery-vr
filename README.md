@@ -45,14 +45,16 @@ A VR mod for Easy Delivery Co (BepInEx 5 + Unity's OpenXR plugin injected at run
 | Right trigger / left trigger | Throttle / brake + reverse |
 | A / B | Interact, select / handbrake, back |
 | X / Y | Inventory / map |
-| Left menu button | Pause |
+| Left menu button: tap / hold 1 s | Pause / **VR settings panel** (cab tilt, turning, wheel, vibration, HUD, seat) |
 | Grip near the steering wheel | Grab the wheel and steer with your hands (one or both) |
 | Right grip / left grip (away from wheel) | Horn / radio |
 | Left stick tap / hold 1 s | Headlights / reset truck |
 | Right stick tap / hold 1 s | Change camera / recenter view |
 | Right stick | Camera look (chase / over-the-head cam); snap turn when on foot in first person |
 
-Keyboard: **F8** = recenter, **F7** = dump camera setup to the BepInEx log. Gamepad and keyboard keep working.
+Keyboard: **F8** = recenter, **F10** = VR settings panel, **F9** = save a VR view snapshot to `BepInEx/vr_snapshots`,
+**F7** = dump camera setup to the BepInEx log. For development, writing `settings` or `snapshot` to `BepInEx/vr_cmd.txt`
+triggers the same actions. Gamepad and keyboard keep working.
 Set `EnableVR = false` in `BepInEx\config\easydeliveryvr.cfg` to play flat.
 
 ## Repo layout

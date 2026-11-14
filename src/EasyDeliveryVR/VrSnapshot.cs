@@ -29,10 +29,27 @@ namespace EasyDeliveryVR
             if (SceneManager.GetActiveScene().name == scene) Take(scene);
         }
 
+        private float _nextCmdCheck;
+
         private void Update()
         {
             var kb = Keyboard.current;
             if (kb != null && kb.f9Key.wasPressedThisFrame) Take("manual");
+
+            // Debug hook for development: commands written to BepInEx/vr_cmd.txt (one per line), e.g. "settings", "snapshot".
+            if (Time.unscaledTime < _nextCmdCheck) return;
+            _nextCmdCheck = Time.unscaledTime + 0.5f;
+            var file = Path.Combine(BepInEx.Paths.BepInExRootPath, "vr_cmd.txt");
+            if (!File.Exists(file)) return;
+            string[] lines;
+            try { lines = File.ReadAllLines(file); File.Delete(file); } catch { return; }
+            foreach (var raw in lines)
+            {
+                var cmd = raw.Trim().ToLowerInvariant();
+                Plugin.Log.LogInfo("VR debug command: " + cmd);
+                if (cmd == "snapshot") Take("cmd");
+                else if (cmd == "settings") Ui.VrSettingsMenu.Toggle();
+            }
         }
 
         public void Take(string label)

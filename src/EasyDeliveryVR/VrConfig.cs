@@ -7,6 +7,7 @@ namespace EasyDeliveryVR
         public static ConfigEntry<bool> EnableVr;
         public static ConfigEntry<bool> ForceCabView;
         public static ConfigEntry<bool> DisableCameraShake;
+        public static ConfigEntry<float> CabTilt;
         public static ConfigEntry<bool> SmoothTruckPhysics;
         public static ConfigEntry<bool> CenterOnWheel;
         public static ConfigEntry<float> SeatOffsetX, SeatOffsetY, SeatOffsetZ;
@@ -34,6 +35,8 @@ namespace EasyDeliveryVR
             SeatOffsetX = cfg.Bind("Driving", "SeatOffsetRight", 0f, "Extra seat offset in meters: positive = to the right.");
             SeatOffsetY = cfg.Bind("Driving", "SeatOffsetUp", 0f, "Extra seat offset in meters: positive = higher.");
             SeatOffsetZ = cfg.Bind("Driving", "SeatOffsetForward", 0f, "Extra seat offset in meters: positive = closer to the windshield.");
+            CabTilt = cfg.Bind("Comfort", "CabTilt", 0f,
+                "How much the cab view follows the truck's roll and pitch (bumps, body sway): 0 = level horizon, follows heading only; 1 = fully rigid with the truck.");
             DisableCameraShake = cfg.Bind("Comfort", "DisableCameraShake", true, "Disable the acceleration-based camera shake.");
             SmoothTruckPhysics = cfg.Bind("Comfort", "SmoothTruckPhysics", true,
                 "Enable rigidbody interpolation on the truck so the cab doesn't judder at headset refresh rates.");

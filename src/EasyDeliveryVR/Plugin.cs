@@ -43,6 +43,7 @@ namespace EasyDeliveryVR
                 host.AddComponent<VrSnapshot>();
                 host.AddComponent<VrLaser>();
                 host.AddComponent<Motion.VrHands>(); // after VrCameraManager: its onBeforeRender must run second
+                host.AddComponent<VrSettingsMenu>();
             }
             else
                 Log.LogInfo("VR not started; game runs flat.");

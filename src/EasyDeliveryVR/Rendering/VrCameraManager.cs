@@ -232,7 +232,7 @@ namespace EasyDeliveryVR.Rendering
             {
                 case ViewMode.Cab:
                     Anchor = UpdateSeat();
-                    AnchorRotation = Anchor.rotation; // rigid with the truck, including its tilt
+                    AnchorRotation = CabRotation(Anchor.rotation);
                     break;
                 case ViewMode.OnFoot:
                     Anchor = footAnchor;
@@ -252,6 +252,21 @@ namespace EasyDeliveryVR.Rendering
             {
                 _cam.transform.SetPositionAndRotation(Anchor.position + AnchorRotation * headPos, AnchorRotation * headRot);
             }
+        }
+
+        /// <summary>
+        /// Comfort: blend between following only the truck's heading (level horizon) and following its full
+        /// rotation including roll/pitch from bumps and body sway (config Comfort/CabTilt, 0..1).
+        /// </summary>
+        private static Quaternion CabRotation(Quaternion truck)
+        {
+            float tilt = Mathf.Clamp01(VrConfig.CabTilt.Value);
+            if (tilt >= 0.999f) return truck;
+            var fwd = truck * Vector3.forward;
+            fwd.y = 0f;
+            if (fwd.sqrMagnitude < 1e-4f) return truck; // pointing straight up/down: keep as is
+            var level = Quaternion.LookRotation(fwd.normalized, Vector3.up);
+            return Quaternion.Slerp(level, truck, tilt);
         }
 
         // ---- Cab seat ----

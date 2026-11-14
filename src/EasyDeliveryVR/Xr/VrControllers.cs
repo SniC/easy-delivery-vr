@@ -22,9 +22,10 @@ namespace EasyDeliveryVR.Xr
         private static int _frame = -1;
 
         // Hold tracking for stick clicks (tap vs. hold)
-        private static float _leftClickTime, _rightClickTime;
-        private static bool _leftHoldFired, _rightHoldFired;
+        private static float _leftClickTime, _rightClickTime, _menuTime;
+        private static bool _leftHoldFired, _rightHoldFired, _menuHoldFired;
         public static bool LeftClickTapped, RightClickTapped, LeftClickHeld, RightClickHeld;
+        public static bool MenuTapped, MenuHeld; // left menu button: tap = pause, hold = VR settings
 
         public const float HoldSeconds = 1.0f;
 
@@ -40,6 +41,7 @@ namespace EasyDeliveryVR.Xr
 
             Track(Left.StickClick, PrevLeft.StickClick, ref _leftClickTime, ref _leftHoldFired, out LeftClickTapped, out LeftClickHeld);
             Track(Right.StickClick, PrevRight.StickClick, ref _rightClickTime, ref _rightHoldFired, out RightClickTapped, out RightClickHeld);
+            Track(Left.Menu, PrevLeft.Menu, ref _menuTime, ref _menuHoldFired, out MenuTapped, out MenuHeld);
         }
 
         public static bool AnyValid => Left.Valid || Right.Valid;
