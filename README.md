@@ -1,46 +1,15 @@
 # Easy Delivery Co VR
 
-**Deliver packages through the snow in full VR.** Sit behind the wheel of your truck, steer it with your own hands,
-read your fuel and radio off the dashboard, then hop out, grab the package and carry it to the door.
-
-A free, unofficial VR mod for Easy Delivery Co. Unzip one file into the game folder and play. Made for Quest 2
-(Steam Link or Virtual Desktop) and Steam Frame (Steam Link); other SteamVR / OpenXR headsets should work too.
+A free, unofficial VR mod for Easy Delivery Co. Made for Quest 2 (Steam Link, Virtual Desktop) and Steam Frame.
 
 ## Features
 
-### Drive it for real
-- **Sit in the cab.** A seated first-person view behind the wheel, auto-centered on the steering wheel, with your head
-  tracked in 6DoF. Lean out the window, check the mirror, look over your shoulder.
-- **Grab the steering wheel.** Squeeze the grip on the wheel and turn it with one or both hands, or just use the stick.
-- **Feel the road.** Controller vibration on bumps, landings and crashes.
-- **A dashboard that works.** Fuel and time on a screen behind the wheel; radio, money and distance to the drop-off
-  built into the dashboard. Move, resize and tilt every screen to your liking.
-- **Tune the radio by hand.** Hold the grip and flick the stick to switch the radio on, change channels or scan.
-
-### Walk, reach and carry
-- **Your choice of view on foot.** The game's over-the-head view, or first person with one click.
-- **Real hands.** The character's own mitten hands follow your controllers.
-- **Reach out and grab.** Pick up packages, open the truck bed and doors, and take items by reaching for them;
-  carry the package in your hand and put it down exactly where you want. Deliveries count as usual.
-- **Tools in your hand.** Held items sit in your right hand instead of in your face, scaled to a sensible size.
-
-### Menus that make sense in VR
-- **Laser pointer.** Point and click on menus, the map and the in-game computer with your right hand.
-- **Tablet on your wrist.** In first person, menus and the computer appear on your left hand like a tablet.
-- **Markers in the world.** Drop-off markers, labels and item icons line up with the places they point at.
-- **Readable conversations.** Dialog text moves in front of the person you're talking to.
-- **Touch controls on the controls screen.** The game's own controls screen shows the controller buttons.
-
-### Comfortable for hours
-- **Level horizon.** The cab follows the truck's heading but not its bumps and sway, with an in-game slider if you
-  want some of that back.
-- **No camera shake, no zoom, no jitter.** Effects made for a flat screen are switched off in VR.
-- **Stable visuals.** The game's retro vertex wobble is turned off so nearby objects don't swim (toggleable).
-- **Snap or smooth turning**, an optional **comfort vignette**, and **recenter** any time.
-
-### Everything adjustable in game
-Hold **Y** for the VR settings panel: comfort, turning, wheel sensitivity, vibration, menu and HUD size and distance,
-hands, dashboard screens and seat position. Changes apply instantly and are saved.
+- Seated cab view; steer with your hands on the wheel or with the stick
+- Fuel, radio and money on screens built into the dashboard
+- On foot: over-the-head or first person, with your own hands
+- Grab packages, doors and items by reaching for them
+- Menus on your left hand, laser pointer on your right
+- Comfort options and an in-game VR settings panel (hold Y)
 
 ## Install
 
