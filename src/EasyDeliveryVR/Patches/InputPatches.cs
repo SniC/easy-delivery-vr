@@ -24,12 +24,21 @@ namespace EasyDeliveryVR.Patches
     {
         private const float Deadzone = 0.15f;
 
+        private static float _nextLog;
+
         [HarmonyPostfix, HarmonyPatch("GetInput")]
         private static void GetInputPostfix(sInputManager __instance)
         {
-            if (!XrRuntime.Running || sInputManager.players == null || sInputManager.players[0] != __instance) return;
+            if (!XrRuntime.Running) return;
             VrControllers.Update();
+            if (sInputManager.players == null || sInputManager.players.Length == 0 || sInputManager.players[0] != __instance) return;
             if (!VrControllers.AnyValid) return;
+            try { Merge(__instance); }
+            finally { DebugLog(__instance); }
+        }
+
+        private static void Merge(sInputManager __instance)
+        {
 
             var L = VrControllers.Left;
             var R = VrControllers.Right;
@@ -104,6 +113,25 @@ namespace EasyDeliveryVR.Patches
             bp.b = b.b && !pb.b;
             bp.start = b.start && !pb.start;
             bp.select = b.select && !pb.select;
+        }
+
+        /// <summary>Debug (config Debug/LogInput): every 2 s while a VR control is touched, log what we read and what the truck gets.</summary>
+        private static void DebugLog(sInputManager inst)
+        {
+            var L = VrControllers.Left;
+            var R = VrControllers.Right;
+            bool active = L.Stick.sqrMagnitude > 0.04f || R.Stick.sqrMagnitude > 0.04f || L.Trigger > 0.1f || R.Trigger > 0.1f
+                          || L.Primary || R.Primary || L.Secondary || R.Secondary;
+            if (!VrConfig.DebugInput.Value || !active || Time.unscaledTime < _nextLog) return;
+            _nextLog = Time.unscaledTime + 2f;
+            int idx = sInputManager.players == null ? -2 : System.Array.IndexOf(sInputManager.players, inst);
+            var car = Object.FindFirstObjectByType<sCarController>();
+            var rally = car != null ? car.GetComponent<sRallyDriving>() : null;
+            Plugin.Log.LogInfo($"VR input: L(stick={L.Stick} trig={L.Trigger:F2}) R(trig={R.Trigger:F2}) " +
+                               $"-> player {idx}/{sInputManager.players?.Length} merged drive={inst.driveInput} brake={inst.brakePressed} paused={PauseSystem.paused} | " +
+                               $"car={(car ? car.name : "none")} player={(car ? car.player : -99)} override={(car ? car.overridePhysics : false)} " +
+                               $"target={(car ? car.targetInput : Vector2.zero)} input={(car ? car.input : Vector2.zero)} guy={(car ? car.GuyActive : false)} " +
+                               $"rally={(rally ? $"{rally.enabled} p{rally.playerNumber}" : "none")}");
         }
 
         private static Vector2 _dpad;

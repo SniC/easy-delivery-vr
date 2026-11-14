@@ -46,11 +46,22 @@ namespace EasyDeliveryVR.Xr
 
         public static bool Pressed(bool now, bool prev) => now && !prev;
 
+        private static readonly System.Collections.Generic.HashSet<string> Logged = new System.Collections.Generic.HashSet<string>();
+
         private static Hand Read(XRNode node)
         {
             var d = InputDevices.GetDeviceAtXRNode(node);
             var h = new Hand { Valid = d.isValid };
             if (!h.Valid) return h;
+
+            if (Logged.Add(node + d.name))
+            {
+                var usages = new System.Collections.Generic.List<InputFeatureUsage>();
+                d.TryGetFeatureUsages(usages);
+                var names = new System.Text.StringBuilder();
+                foreach (var u in usages) names.Append(u.name).Append(':').Append(u.type.Name).Append(' ');
+                Plugin.Log.LogInfo($"VR: {node} device '{d.name}' ({d.characteristics}) usages: {names}");
+            }
             d.TryGetFeatureValue(CommonUsages.primary2DAxis, out h.Stick);
             d.TryGetFeatureValue(CommonUsages.trigger, out h.Trigger);
             d.TryGetFeatureValue(CommonUsages.grip, out h.Grip);
