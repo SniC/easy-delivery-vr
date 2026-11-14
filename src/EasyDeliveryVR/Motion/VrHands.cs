@@ -117,8 +117,34 @@ namespace EasyDeliveryVR.Motion
                 }
             }
             if (_radius < 0.1f || _radius > 0.4f) _radius = 0.2f;
-            _gameHand = _wheel.hand != null ? _wheel.hand.GetComponentsInChildren<Renderer>(true) : new Renderer[0];
+            _gameHand = FindCabHands();
             Plugin.Log.LogInfo($"VR hands: steering wheel '{wt.name}' radius {_radius:F2} m");
+        }
+
+        /// <summary>
+        /// The game's hands in the cab: the animated one (InteriorInteraction.hand) first, then every other
+        /// hand-like renderer in the truck (e.g. the second hand resting on the wheel), matched by name or by
+        /// using the same mesh as the animated hand. First entry is the source for the VR hand look.
+        /// </summary>
+        private Renderer[] FindCabHands()
+        {
+            var list = new System.Collections.Generic.List<Renderer>();
+            if (_wheel.hand != null) list.AddRange(_wheel.hand.GetComponentsInChildren<Renderer>(true));
+            Mesh handMesh = list.Count > 0 && list[0].TryGetComponent<MeshFilter>(out var hmf) ? hmf.sharedMesh : null;
+
+            var root = _car != null ? _car.transform : _wheel.transform.root;
+            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (list.Contains(r)) continue;
+                bool named = r.name.IndexOf("hand", System.StringComparison.OrdinalIgnoreCase) >= 0;
+                bool sameMesh = handMesh != null && r.TryGetComponent<MeshFilter>(out var mf) && mf.sharedMesh == handMesh
+                                && r.sharedMaterial == list[0].sharedMaterial;
+                if (!named && !sameMesh) continue;
+                if (r.bounds.size.magnitude > 0.6f) continue; // not a hand-sized object
+                list.Add(r);
+            }
+            foreach (var r in list) Plugin.Log.LogInfo($"VR hands: game cab hand '{r.transform.parent?.name}/{r.name}'");
+            return list.ToArray();
         }
 
         private void ReadPose(Hand h)
