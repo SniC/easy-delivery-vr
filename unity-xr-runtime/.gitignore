@@ -13,3 +13,4 @@ Assets/Editor.meta
 Assets/Editor/*.meta
 ProjectSettings/
 Packages/packages-lock.json
+.vscode/
