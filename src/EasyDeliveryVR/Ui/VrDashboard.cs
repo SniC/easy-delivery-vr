@@ -235,7 +235,9 @@ namespace EasyDeliveryVR.Ui
             // Gauges: looking through the upper half of the wheel. Radio: the dash's center, at the same height.
             var gaugeAim = wt.position + up * (radius * 0.55f + h);
             float lateral = Vector3.Dot(wt.position - car.position, car.right);
-            var radioAim = wt.position - car.right * lateral + up * (radius * 0.3f + h);
+            var radioAim = wt.position - car.right * lateral + up * (radius * 0.3f + 0.05f + h); // vertically centered on the dash face
+            var driverFwd = Vector3.Dot(car.forward, wt.position - eye) >= 0f ? car.forward : -car.forward;
+            radioAim += Vector3.Cross(up, driverFwd).normalized * 0.035f; // a bit to the driver's right
 
             var basis = _dash != null ? _dash : _wheel.transform;
             int hits = 0;
@@ -336,18 +338,7 @@ namespace EasyDeliveryVR.Ui
             r.sharedMaterial = _mat;
             r.shadowCastingMode = ShadowCastingMode.Off;
             r.receiveShadows = false;
-
-            // Dark backing so the pixel text reads against the dashboard.
-            var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            Destroy(bg.GetComponent<Collider>());
-            bg.name = "Backing";
-            bg.transform.SetParent(go.transform, false);
-            var bgMat = new Material(Shader.Find("UI/Default")) { color = new Color(0.02f, 0.03f, 0.03f, 0.85f), renderQueue = Queue };
-            bgMat.SetInt("unity_GUIZTestMode", (int)CompareFunction.LessEqual);
-            var br = bg.GetComponent<Renderer>();
-            br.sharedMaterial = bgMat;
-            br.shadowCastingMode = ShadowCastingMode.Off;
-            return r;
+            return r; // no backing: the HUD's pixels are drawn straight onto the dashboard
         }
 
         /// <summary>A piece of the HUD texture (pixels, y down) placed at a spot on a panel (panel pixels, y down).</summary>
@@ -403,11 +394,6 @@ namespace EasyDeliveryVR.Ui
             mesh.SetTriangles(tris, 0);
             mesh.RecalculateBounds();
             r.GetComponent<MeshFilter>().sharedMesh = mesh;
-
-            float sx = size.x * metersPerPixel, sy = size.y * metersPerPixel;
-            var bg = r.transform.Find("Backing");
-            bg.localPosition = new Vector3(0f, 0f, 0.0015f); // between the panel and the dashboard
-            bg.localScale = new Vector3(sx + 0.01f, sy + 0.01f, 1f);
         }
 
         /// <summary>Pixel rect (y down) to texture UV rect (v up).</summary>
