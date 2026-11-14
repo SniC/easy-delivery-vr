@@ -1,6 +1,9 @@
 using BepInEx;
 using BepInEx.Logging;
+using EasyDeliveryVR.Rendering;
+using EasyDeliveryVR.Xr;
 using HarmonyLib;
+using UnityEngine;
 
 namespace EasyDeliveryVR
 {
@@ -25,6 +28,19 @@ namespace EasyDeliveryVR
             _harmony.PatchAll(typeof(Plugin).Assembly);
 
             Log.LogInfo($"{Name} {Version} loaded");
+
+            // Own persistent object: the BepInEx manager object isn't guaranteed to survive scene loads.
+            var host = new GameObject("EasyDeliveryVR");
+            DontDestroyOnLoad(host);
+            host.hideFlags = HideFlags.HideAndDontSave;
+            host.AddComponent<Diagnostics>();
+
+            if (VrConfig.EnableVr.Value && XrRuntime.Start())
+                host.AddComponent<VrCameraManager>();
+            else
+                Log.LogInfo("VR not started; game runs flat.");
         }
+
+        private void OnApplicationQuit() => XrRuntime.Stop();
     }
 }
