@@ -29,8 +29,18 @@ namespace EasyDeliveryVR.Ui
 
         private const float ReferenceDepth = 10.9f; // depth of the game's main screen quad
 
-        private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
-        private void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
+        // Added after VrCameraManager, so AlignRoot runs after the camera pose of this frame is set.
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            Application.onBeforeRender += AlignRoot;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            Application.onBeforeRender -= AlignRoot;
+        }
 
         private void OnSceneLoaded(Scene s, LoadSceneMode m) => Clear();
 
@@ -127,8 +137,21 @@ namespace EasyDeliveryVR.Ui
             if (_root.parent != anchor)
                 _root.SetParent(anchor, false);
             _root.localPosition = Vector3.zero;
-            _root.localRotation = Quaternion.identity;
             _root.localScale = Vector3.one;
+            AlignRoot();
+        }
+
+        /// <summary>
+        /// Turn the screen with the view, not with the raw anchor: in the cab the view follows the truck's
+        /// roll/pitch only partly (Comfort/CabTilt), so a screen glued to the truck would wobble on every bump.
+        /// </summary>
+        private void AlignRoot()
+        {
+            if (_root == null || _root.parent == null || _root.parent != VrCameraManager.Anchor) return;
+            if (VrCameraManager.Mode == VrCameraManager.ViewMode.Default)
+                _root.localRotation = Quaternion.identity;
+            else
+                _root.rotation = VrCameraManager.AnchorRotation;
         }
 
         private void Sync()

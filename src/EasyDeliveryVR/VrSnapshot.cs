@@ -31,6 +31,32 @@ namespace EasyDeliveryVR
 
         private float _nextCmdCheck;
 
+        /// <summary>Logs every shader used by active renderers, with its properties and a sample object.</summary>
+        private static void DumpShaders()
+        {
+            var seen = new System.Collections.Generic.HashSet<Shader>();
+            foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+                foreach (var m in r.sharedMaterials)
+                {
+                    if (m == null || m.shader == null || !seen.Add(m.shader)) continue;
+                    var s = m.shader;
+                    var props = new System.Text.StringBuilder();
+                    for (int i = 0; i < s.GetPropertyCount(); i++)
+                    {
+                        var n = s.GetPropertyName(i);
+                        props.Append(n);
+                        if (s.GetPropertyType(i) == UnityEngine.Rendering.ShaderPropertyType.Float || s.GetPropertyType(i) == UnityEngine.Rendering.ShaderPropertyType.Range)
+                            props.Append('=').Append(m.GetFloat(n));
+                        else if (s.GetPropertyType(i) == UnityEngine.Rendering.ShaderPropertyType.Vector)
+                            props.Append('=').Append(m.GetVector(n));
+                        props.Append(' ');
+                    }
+                    Plugin.Log.LogInfo($"VR shader '{s.name}' on '{r.name}' kw=[{string.Join(",", m.shaderKeywords)}] props: {props}");
+                }
+            foreach (var n in new[] { "_Resolution", "_SnapResolution", "_ScreenRes", "_PixelSize", "_Snap", "_VertexSnap", "_Jitter" })
+                Plugin.Log.LogInfo($"VR global {n} = {Shader.GetGlobalFloat(n)} / {Shader.GetGlobalVector(n)}");
+        }
+
         private void Update()
         {
             var kb = Keyboard.current;
@@ -49,6 +75,7 @@ namespace EasyDeliveryVR
                 Plugin.Log.LogInfo("VR debug command: " + cmd);
                 if (cmd == "snapshot") Take("cmd");
                 else if (cmd == "settings") Ui.VrSettingsMenu.Toggle();
+                else if (cmd == "shaders") DumpShaders();
             }
         }
 

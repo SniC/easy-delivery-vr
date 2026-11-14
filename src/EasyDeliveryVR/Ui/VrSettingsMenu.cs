@@ -40,8 +40,30 @@ namespace EasyDeliveryVR.Ui
         private TextMesh _text;
         private Vector2 _dpad;
 
-        private void OnEnable() => UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
-        private void OnDisable() => UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        private void OnEnable()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+            Application.onBeforeRender += FollowView;
+        }
+
+        private void OnDisable()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+            Application.onBeforeRender -= FollowView;
+        }
+
+        // Panel pose relative to the view anchor (position + AnchorRotation), so it doesn't wobble with the truck.
+        private Transform _followAnchor;
+        private Vector3 _relPos;
+        private Quaternion _relRot;
+
+        private void FollowView()
+        {
+            if (!IsOpen || _panel == null || _followAnchor == null || _followAnchor != VrCameraManager.Anchor) return;
+            if (VrCameraManager.Mode == VrCameraManager.ViewMode.Default) return; // plain parenting is right there
+            var ar = VrCameraManager.AnchorRotation;
+            _panel.SetPositionAndRotation(_followAnchor.position + ar * _relPos, ar * _relRot);
+        }
 
         private void OnSceneLoaded(UnityEngine.SceneManagement.Scene s, UnityEngine.SceneManagement.LoadSceneMode m)
         {
@@ -148,7 +170,14 @@ namespace EasyDeliveryVR.Ui
             _panel.SetParent(null, false);
             _panel.position = cam.transform.position + fwd * 1.0f - Vector3.up * 0.1f;
             _panel.rotation = Quaternion.LookRotation(fwd, Vector3.up);
-            if (VrCameraManager.Anchor != null) _panel.SetParent(VrCameraManager.Anchor, true);
+            _followAnchor = VrCameraManager.Anchor;
+            if (_followAnchor != null)
+            {
+                var inv = Quaternion.Inverse(VrCameraManager.AnchorRotation);
+                _relPos = inv * (_panel.position - _followAnchor.position);
+                _relRot = inv * _panel.rotation;
+                _panel.SetParent(_followAnchor, true);
+            }
             _panel.gameObject.SetActive(true);
             IsOpen = true;
             _dpad = new Vector2(1, 1); // ignore the stick until it's released
