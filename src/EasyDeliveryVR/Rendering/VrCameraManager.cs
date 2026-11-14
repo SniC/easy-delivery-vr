@@ -52,6 +52,8 @@ namespace EasyDeliveryVR.Rendering
             _cabForcedThisScene = false;
             _footCam = null;
             _footForcedThisScene = false;
+            _seat = null;
+            _wheel = null;
             _guy = null;
             _footAnchor = null;
             _guyFirstPersonSet = false;
@@ -229,7 +231,7 @@ namespace EasyDeliveryVR.Rendering
             switch (mode)
             {
                 case ViewMode.Cab:
-                    Anchor = _truckCam.firstPersonPivot;
+                    Anchor = UpdateSeat();
                     AnchorRotation = Anchor.rotation; // rigid with the truck, including its tilt
                     break;
                 case ViewMode.OnFoot:
@@ -250,6 +252,48 @@ namespace EasyDeliveryVR.Rendering
             {
                 _cam.transform.SetPositionAndRotation(Anchor.position + AnchorRotation * headPos, AnchorRotation * headRot);
             }
+        }
+
+        // ---- Cab seat ----
+
+        private Transform _seat;
+        private InteriorInteraction _wheel;
+        private bool _seatLogged;
+
+        /// <summary>
+        /// The head's recenter point in the cab: the game's first-person pivot, moved sideways so it lines up
+        /// with the steering wheel's center, plus the configured seat offset.
+        /// </summary>
+        private Transform UpdateSeat()
+        {
+            var pivot = _truckCam.firstPersonPivot;
+            if (_seat == null || _seat.parent != pivot)
+            {
+                _seat = new GameObject("VR Seat").transform;
+                _seat.SetParent(pivot, false);
+                _seat.localRotation = Quaternion.identity;
+                _seatLogged = false;
+            }
+            if (_wheel == null) _wheel = FindFirstObjectByType<InteriorInteraction>();
+
+            var offset = Vector3.zero;
+            if (VrConfig.CenterOnWheel.Value && _wheel != null && _wheel.steeringWheel != null)
+            {
+                // Sideways only; pivot space, unaffected by the pivot's scale.
+                var toWheel = Quaternion.Inverse(pivot.rotation) * (_wheel.steeringWheel.position - pivot.position);
+                offset.x = toWheel.x;
+                if (!_seatLogged)
+                {
+                    _seatLogged = true;
+                    Plugin.Log.LogInfo($"VR: cab seat centered on wheel, sideways shift {toWheel.x:F3} m (wheel at {toWheel} from pivot)");
+                }
+            }
+            offset += new Vector3(VrConfig.SeatOffsetX.Value, VrConfig.SeatOffsetY.Value, VrConfig.SeatOffsetZ.Value);
+
+            // Set in world units so the pivot's scale doesn't stretch the offset.
+            _seat.position = pivot.position + pivot.rotation * offset;
+            _seat.rotation = pivot.rotation;
+            return _seat;
         }
 
         // ---- On foot ----
