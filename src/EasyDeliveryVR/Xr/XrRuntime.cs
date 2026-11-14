@@ -52,6 +52,10 @@ namespace EasyDeliveryVR.Xr
                 UnityEngine.Object.DontDestroyOnLoad((UnityEngine.Object)_manager);
                 UnityEngine.Object.DontDestroyOnLoad(loader);
 
+                // TryAddLoader only accepts loaders in the private m_RegisteredLoaders set, which the editor fills.
+                var registered = managerType.GetField("m_RegisteredLoaders", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(_manager);
+                registered?.GetType().GetMethod("Add")?.Invoke(registered, new object[] { loader });
+
                 bool added = (bool)managerType.GetMethod("TryAddLoader")
                     .Invoke(_manager, new object[] { loader, -1 });
                 if (!added) { Plugin.Log.LogError("XR: could not add OpenXR loader"); return false; }
@@ -174,8 +178,8 @@ namespace EasyDeliveryVR.Xr
         {
             var displays = new System.Collections.Generic.List<XRDisplaySubsystem>();
             SubsystemManager.GetSubsystems(displays);
-            var d = displays.FirstOrDefault(s => s.running);
-            Plugin.Log.LogInfo($"XR: running. Display subsystem: {(d != null ? d.subsystemDescriptor.id : "none")}, device: {XRSettings.loadedDeviceName}");
+            var d = displays.FirstOrDefault();
+            Plugin.Log.LogInfo($"XR: running. Display subsystem: {(d != null ? $"{d.subsystemDescriptor.id} (running={d.running})" : "none")}, device: {XRSettings.loadedDeviceName}");
 
             try
             {
