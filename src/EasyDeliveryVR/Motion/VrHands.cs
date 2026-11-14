@@ -32,6 +32,9 @@ namespace EasyDeliveryVR.Motion
         public static bool RightBusy => _instance != null && (_instance._r.Grabbing || _instance._r.NearWheel);
 
         private static VrHands _instance;
+
+        /// <summary>After the dashboard display (drawn without depth test), so the hands stay in front of it.</summary>
+        private const int HandQueue = Ui.VrDashboard.Queue + 100;
         private readonly Hand _l = new Hand { Left = true };
         private readonly Hand _r = new Hand { Left = false };
 
@@ -63,6 +66,7 @@ namespace EasyDeliveryVR.Motion
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Sprites/Default");
             var mat = new Material(shader);
             mat.color = new Color(0.25f, 0.22f, 0.2f);
+            mat.renderQueue = HandQueue;
             var r = go.GetComponent<Renderer>();
             r.sharedMaterial = mat;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -260,7 +264,7 @@ namespace EasyDeliveryVR.Motion
                     h.Visual.GetComponent<MeshFilter>().sharedMesh = srcMf.sharedMesh;
                     // Copies: the VR hands outlive the scene, the game's materials may not.
                     h.Visual.GetComponent<Renderer>().sharedMaterials =
-                        System.Array.ConvertAll(src.sharedMaterials, m => m != null ? new Material(m) : null);
+                        System.Array.ConvertAll(src.sharedMaterials, m => m != null ? new Material(m) { renderQueue = HandQueue } : null);
                     h.Visual.localScale = src.transform.lossyScale; // same size as the hand on the wheel
                 }
                 Plugin.Log.LogInfo($"VR hands: using the game's hand mesh '{srcMf.sharedMesh.name}' ({src.sharedMaterial?.name})");

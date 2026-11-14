@@ -52,6 +52,25 @@ namespace EasyDeliveryVR.Ui
         /// texture's pixels (x right, y down): the line from the head to the point, crossed with the panel.
         /// Used for the game's HUD markers (drop-off, pick-up, labels), which assume the flat 456x256 view.
         /// </summary>
+        /// <summary>The source quad and its VR copy for the screen layer showing <paramref name="rt"/>.</summary>
+        public static bool TryGetCopy(Texture rt, out Renderer source, out Renderer target)
+        {
+            source = target = null;
+            if (_instance == null || rt == null) return false;
+            foreach (var c in _instance._copies.Values)
+            {
+                if (c.Target == null || c.Source == null) continue;
+                var m = c.Source.sharedMaterial;
+                if (m != null && m.HasProperty("_MainTex") && m.GetTexture("_MainTex") == rt)
+                {
+                    source = c.Source;
+                    target = c.Target;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static bool WorldToRtPixel(Texture rt, Vector3 world, out Vector2 px)
         {
             px = new Vector2(-100f, -100f);
