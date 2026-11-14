@@ -81,9 +81,10 @@ namespace EasyDeliveryVR.Patches
             __instance.mapPressed |= VrControllers.YTapped; // on release; holding Y opens the VR settings instead
             __instance.pausePressed |= VrControllers.MenuTapped; // on release; holding opens the VR settings instead
             // Grips grab the steering wheel when a hand is on or near it; otherwise horn (right) / radio (left).
-            if (!Motion.VrHands.RightBusy)
+            // On foot in first person the grips grab things instead (see VrGrab).
+            if (!Motion.VrHands.RightBusy && !Motion.VrGrab.Active)
                 __instance.hornPressed |= VrControllers.Pressed(R.GripButton, pR.GripButton);
-            if (!Motion.VrHands.LeftBusy)
+            if (!Motion.VrHands.LeftBusy && !Motion.VrGrab.Active)
                 __instance.radioPressed |= VrControllers.Pressed(L.GripButton, pL.GripButton);
             __instance.headlightsPressed |= VrControllers.LeftClickTapped;
             __instance.resetHeld |= VrControllers.LeftClickHeld;

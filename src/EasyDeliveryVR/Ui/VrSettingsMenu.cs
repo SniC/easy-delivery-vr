@@ -52,6 +52,7 @@ namespace EasyDeliveryVR.Ui
         {
             AddChoice("Cab tilt (bumps/sway)", VrConfig.CabTilt, new[] { 0f, 0.25f, 0.5f, 1f },
                 v => v <= 0f ? "Level horizon" : v >= 1f ? "Full (rigid)" : $"{v * 100:F0}%");
+            AddChoice("Comfort vignette", VrConfig.Vignette, new[] { 0f, 0.25f, 0.5f, 0.75f, 1f }, v => v <= 0f ? "Off" : $"{v * 100:F0}%");
             AddBool("Turning on foot", VrConfig.SmoothTurn, "Smooth", "Snap");
             AddChoice("Snap turn angle", VrConfig.SnapTurnAngle, new[] { 15f, 22.5f, 30f, 45f, 90f }, v => $"{v:0.#}°");
             AddChoice("Smooth turn speed", VrConfig.SmoothTurnSpeed, new[] { 60f, 90f, 120f, 180f, 240f }, v => $"{v:F0}°/s");
@@ -60,6 +61,7 @@ namespace EasyDeliveryVR.Ui
             AddChoice("Menu/HUD distance", VrConfig.ScreenDistance, new[] { 1.25f, 1.5f, 2f, 2.5f, 3f }, v => $"{v:0.##} m");
             AddChoice("Menu/HUD size", VrConfig.ScreenFov, new[] { 35f, 40f, 45f, 50f, 60f }, v => $"{v:F0}°");
             AddBool("Show hands", VrConfig.ShowHands, "On", "Off");
+            AddBool("Grab things by hand (on foot)", VrConfig.HandGrab, "On", "Off");
             AddBool("Camera shake", VrConfig.DisableCameraShake, "Off", "On");
             AddChoice("Seat left/right", VrConfig.SeatOffsetX, Steps(-0.15f, 0.15f, 0.01f), v => $"{v * 100:+0;-0;0} cm");
             AddChoice("Seat height", VrConfig.SeatOffsetY, Steps(-0.2f, 0.2f, 0.02f), v => $"{v * 100:+0;-0;0} cm");
@@ -181,8 +183,8 @@ namespace EasyDeliveryVR.Ui
             var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);
             Destroy(bg.GetComponent<Collider>());
             bg.transform.SetParent(_panel, false);
-            bg.transform.localPosition = new Vector3(0f, -0.035f, 0.002f);
-            bg.transform.localScale = new Vector3(0.92f, 0.74f, 1f);
+            bg.transform.localPosition = new Vector3(0f, -0.065f, 0.002f);
+            bg.transform.localScale = new Vector3(0.92f, 0.8f, 1f);
             var bgMat = new Material(Shader.Find("Sprites/Default")) { color = new Color(0.05f, 0.05f, 0.06f, 0.96f), renderQueue = 4700 };
             bg.GetComponent<Renderer>().sharedMaterial = bgMat;
 

@@ -21,7 +21,7 @@ A VR mod for Easy Delivery Co (BepInEx 5 + Unity's OpenXR plugin injected at run
 | M3 | HUD + in-game computer/menus on VR panels, laser pointer | menus + laser done; HUD placement pending |
 | M4 | On-foot VR: over-the-head view by default; optional first person with head-relative walking, snap/smooth turn | done (right stick tap toggles first person on foot) |
 | M5 | Hands, grab-the-wheel steering, haptics | code done, needs headset test |
-| M6 | Grab packages/items by hand, vignette, settings polish | |
+| M6 | Grab packages/items by hand, vignette, settings polish | code done, needs headset test |
 
 ## Setup
 
@@ -48,6 +48,7 @@ A VR mod for Easy Delivery Co (BepInEx 5 + Unity's OpenXR plugin injected at run
 | Y: tap / hold 1 s | Map / **VR settings panel** (cab tilt, turning, wheel, vibration, HUD, seat) |
 | Left menu button: tap / hold 1 s | Pause / VR settings panel (if the runtime passes the button to the game) |
 | Grip near the steering wheel | Grab the wheel and steer with your hands (one or both) |
+| Grip near a package / door / truck bed / item (first person on foot) | Pick up, get in, open, use; grip again while carrying = put the package down where your hand is |
 | Right grip / left grip (away from wheel) | Horn / radio |
 | Left stick tap / hold 1 s | Headlights / reset truck |
 | Right stick tap / hold 1 s | Change camera / recenter view |
