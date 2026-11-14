@@ -253,12 +253,15 @@ namespace EasyDeliveryVR.Ui
                     pos = aim; // fallback: hang where we aimed, facing the driver
                     normal = (eye - aim).normalized;
                 }
-                // Screen "up": the truck's up on an upright surface, the far edge (away from the driver) on a flat one.
-                // Both terms point the same way on a sloped surface, so this never flips.
-                var view = (pos - eye).normalized;
-                var panelUp = Vector3.ProjectOnPlane(up + view, normal);
-                if (panelUp.sqrMagnitude < 1e-4f) panelUp = Vector3.ProjectOnPlane(up, normal);
-                var rot = Quaternion.LookRotation(-normal, panelUp.normalized); // +z into the dashboard, mesh faces the driver
+                // Keep the screen's horizontal edge level with the truck (no roll), as the driver sees it:
+                // right = the driver's right projected onto the surface, up follows from it. Never flips or tilts,
+                // however the surface is angled.
+                var fwd = Vector3.Dot(car.forward, aim - eye) >= 0f ? car.forward : -car.forward; // the driver's forward
+                var right = Vector3.ProjectOnPlane(Vector3.Cross(up, fwd), normal);
+                if (right.sqrMagnitude < 1e-4f) right = Vector3.Cross(up, fwd);
+                var forward = -normal; // +z into the dashboard, mesh faces the driver
+                var panelUp = Vector3.Cross(forward, right.normalized);
+                var rot = Quaternion.LookRotation(forward, panelUp);
                 _local[i] = new Pose(basis.InverseTransformPoint(pos), Quaternion.Inverse(basis.rotation) * rot);
             }
             if (!_placed) Plugin.Log.LogInfo($"VR dashboard: placed panels, {hits}/2 on the dashboard surface");
