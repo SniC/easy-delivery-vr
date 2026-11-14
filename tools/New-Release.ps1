@@ -87,6 +87,18 @@ try {
     Copy-Item (Join-Path $data "Plugins\x86_64\UnityOpenXR.dll"), (Join-Path $data "Plugins\x86_64\openxr_loader.dll") $nativeDir
     Copy-Item (Join-Path $data "UnitySubsystems") (Join-Path $stage "EasyDeliveryCo_Data") -Recurse
 
+    # BepInEx 5 itself (LGPL-2.1), from the game install: the Doorstop loader next to the exe and BepInEx\core.
+    # Not config, cache, logs or other plugins.
+    $bepCore = Join-Path $GameDir "BepInEx\core"
+    $bepVersion = (Get-Item (Join-Path $bepCore "BepInEx.dll")).VersionInfo.FileVersion
+    foreach ($f in "winhttp.dll", "doorstop_config.ini", ".doorstop_version", "changelog.txt") {
+        $src = Join-Path $GameDir $f
+        if (-not (Test-Path $src)) { throw "Missing BepInEx file $src" }
+        Copy-Item $src $stage -Force
+    }
+    New-Item -ItemType Directory -Force (Join-Path $stage "BepInEx\core") | Out-Null
+    Copy-Item (Join-Path $bepCore "*.dll") (Join-Path $stage "BepInEx\core")
+
     $install = @"
 Easy Delivery VR $tag
 =====================
@@ -96,17 +108,19 @@ Virtual Desktop, and Steam Frame via Steam Link.
 
 Install
 -------
-1. Install BepInEx 5.4.23 or newer (5.x, Windows x64) into the game folder:
-   https://github.com/BepInEx/BepInEx/releases  (file BepInEx_win_x64_5.4.x.zip)
-   Unzip it next to EasyDeliveryCo.exe and start the game once, then close it.
-2. Unzip this release into the same game folder (next to EasyDeliveryCo.exe). It adds:
+1. Unzip this release into the game folder, next to EasyDeliveryCo.exe
+   (Steam: right-click Easy Delivery Co > Manage > Browse local files). Overwrite if asked. It adds:
+     winhttp.dll, doorstop_config.ini, ...     BepInEx $bepVersion loader (mod loader)
+     BepInEx\core\                             BepInEx $bepVersion
      BepInEx\plugins\EasyDeliveryVR\           the mod and Unity's OpenXR files
      EasyDeliveryCo_Data\Plugins\x86_64\       UnityOpenXR.dll, openxr_loader.dll
      EasyDeliveryCo_Data\UnitySubsystems\      OpenXR subsystem manifest
-3. Start SteamVR (Steam Link) or Virtual Desktop (OpenXR runtime), then start the game.
+   Already using BepInEx 5 for other mods? Overwriting with this version is fine.
+2. Start SteamVR (Steam Link) or Virtual Desktop (OpenXR runtime), then start the game.
+   The first start takes a little longer while BepInEx sets itself up.
 
-To play flat again, set EnableVR = false in BepInEx\config\easydeliveryvr.cfg.
-To uninstall, delete the files listed in step 2.
+To play flat again, set EnableVR = false in BepInEx\config\easydeliveryvr.cfg (created on the first start).
+To uninstall, delete the files listed in step 1 (and the BepInEx folder if no other mods use it).
 
 Controls (Touch / Index naming)
 -------------------------------
@@ -131,6 +145,13 @@ Unity Companion License: https://unity.com/legal/licenses/unity-companion-licens
 openxr_loader.dll is the Khronos OpenXR loader, (c) The Khronos Group Inc., Apache License 2.0:
 https://github.com/KhronosGroup/OpenXR-SDK/blob/main/LICENSE
 
+BepInEx (BepInEx\core\BepInEx*.dll) and the Unity Doorstop loader (winhttp.dll, doorstop_config.ini) are
+licensed under the GNU LGPL 2.1; source and license: https://github.com/BepInEx/BepInEx
+(https://github.com/BepInEx/BepInEx/blob/master/LICENSE) and https://github.com/NeighTools/UnityDoorstop
+HarmonyX (0Harmony*.dll, HarmonyXInterop.dll): MIT, https://github.com/BepInEx/HarmonyX
+MonoMod (MonoMod.*.dll): MIT, https://github.com/MonoMod/MonoMod
+Mono.Cecil (Mono.Cecil*.dll): MIT, https://github.com/jbevain/cecil
+
 Easy Delivery Co is not included and is (c) its developers. This mod is unofficial.
 "@
 
@@ -145,9 +166,8 @@ Easy Delivery Co is not included and is (c) its developers. This mod is unoffici
     @"
 ## Install
 
-1. Install [BepInEx 5](https://github.com/BepInEx/BepInEx/releases) (5.4.23 or newer, ``BepInEx_win_x64_5.4.x.zip``) into the Easy Delivery Co folder and start the game once.
-2. Download **EasyDeliveryVR-$tag.zip** below and unzip it into the same folder, next to ``EasyDeliveryCo.exe``.
-3. Start SteamVR (Steam Link) or Virtual Desktop, then start the game.
+1. Download **EasyDeliveryVR-$tag.zip** below and unzip it into the Easy Delivery Co folder, next to ``EasyDeliveryCo.exe`` (Steam: right-click the game > Manage > Browse local files). It includes [BepInEx](https://github.com/BepInEx/BepInEx) $bepVersion, so nothing else is needed.
+2. Start SteamVR (Steam Link) or Virtual Desktop, then start the game.
 
 Hold **Y** in game for the VR settings. Full controls are in ``INSTALL.txt`` in the zip. To play flat again, set ``EnableVR = false`` in ``BepInEx\config\easydeliveryvr.cfg``.
 
