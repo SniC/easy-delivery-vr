@@ -186,6 +186,7 @@ namespace EasyDeliveryVR.Ui
             if (fwd.sqrMagnitude < 1e-4f) fwd = Vector3.forward;
             fwd.Normalize();
             _panel.SetParent(null, false);
+            _panel.localScale = Vector3.one; // detaching from a scaled anchor (the truck) leaves its inverse scale behind
             _panel.position = cam.transform.position + fwd * 1.0f - Vector3.up * 0.1f;
             _panel.rotation = Quaternion.LookRotation(fwd, Vector3.up);
             _followAnchor = VrCameraManager.Anchor;
@@ -208,6 +209,7 @@ namespace EasyDeliveryVR.Ui
             if (_panel != null)
             {
                 _panel.SetParent(null, false);
+                _panel.localScale = Vector3.one;
                 DontDestroyOnLoad(_panel.gameObject);
                 _panel.gameObject.SetActive(false);
             }
