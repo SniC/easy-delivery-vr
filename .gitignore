@@ -46,3 +46,6 @@ Directory.Build.local.props
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Release packages (tools/New-Release.ps1)
+release/

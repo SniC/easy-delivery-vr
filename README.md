@@ -37,6 +37,25 @@ A VR mod for Easy Delivery Co (BepInEx 5 + Unity's OpenXR plugin injected at run
    ```
 4. Start SteamVR (Steam Link) or Virtual Desktop, then launch the game.
 
+## Installing a release (players)
+
+Download `EasyDeliveryVR-vX.Y.Z.zip` from the [releases](../../releases), install
+[BepInEx 5](https://github.com/BepInEx/BepInEx/releases) (win x64) into the game folder, then unzip the release
+into the same folder. No Unity install needed: the zip includes Unity's OpenXR runtime files.
+
+## Making a release
+
+Releases are built on a PC with the game installed (the build needs the game's assemblies, so GitHub's servers
+can't build it). With the XR runtime installed (step 3 above) and the GitHub CLI signed in:
+
+```
+./tools/New-Release.ps1 -Version 0.2.0            # bump version, commit, tag, build, zip, publish the GitHub release
+./tools/New-Release.ps1 -Version 0.2.0 -DryRun    # build + zip + notes into .\release only
+./tools/New-Release.ps1 -Version 0.2.0 -Draft     # publish as a draft release
+```
+
+The release notes contain the install steps and the commits since the previous release.
+
 ## VR controls
 
 | Input | Action |
