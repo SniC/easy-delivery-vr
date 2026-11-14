@@ -3,6 +3,12 @@
 Player-facing notes per release. `tools/New-Release.ps1` puts the section of the version being released into the
 GitHub release notes, so add a section here before releasing.
 
+## v0.2.1
+
+- Gentler controller rumble: it now only reacts to bumps, landings and crashes, not to accelerating, braking or
+  steering, and is much softer (it was far too strong on some controllers, like the Steam Frame's).
+- Vibration setting has finer steps (25% and 75%).
+
 ## v0.2.0
 
 First release.
