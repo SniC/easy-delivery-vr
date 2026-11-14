@@ -46,6 +46,7 @@ namespace EasyDeliveryVR
                 host.AddComponent<Motion.VrHands>(); // after VrCameraManager: its onBeforeRender must run second
                 host.AddComponent<VrSettingsMenu>();
                 host.AddComponent<Motion.VrGrab>();
+                host.AddComponent<Motion.VrHeldItem>();
                 host.AddComponent<VrVignette>();
                 host.AddComponent<VrVertexSnap>();
             }
