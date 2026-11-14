@@ -83,7 +83,8 @@ namespace EasyDeliveryVR.Patches
             __instance.radioPressed |= VrControllers.Pressed(L.GripButton, pL.GripButton);
             __instance.headlightsPressed |= VrControllers.LeftClickTapped;
             __instance.resetHeld |= VrControllers.LeftClickHeld;
-            __instance.cameraPressed |= VrControllers.RightClickTapped;
+            if (!Rendering.VrCameraManager.ConsumeCameraButton)
+                __instance.cameraPressed |= VrControllers.RightClickTapped;
         }
 
         [HarmonyPostfix, HarmonyPatch("GetMenuInput")]

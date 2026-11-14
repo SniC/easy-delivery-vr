@@ -52,6 +52,10 @@ namespace EasyDeliveryVR.Rendering
             _cabForcedThisScene = false;
             _footCam = null;
             _footForcedThisScene = false;
+            _guy = null;
+            _footAnchor = null;
+            _guyFirstPersonSet = false;
+            _hiddenHead = null;
             _needsRecenter = true;
         }
 
@@ -175,12 +179,23 @@ namespace EasyDeliveryVR.Rendering
                    || sys.currentTarget == tc.firstPersonPivot;
         }
 
-        private bool OnFoot()
+        private bool GuyActive => _truckCam != null && _truckCam.car != null && _truckCam.car.GuyActive;
+
+        /// <summary>First person on foot: either the game's own add-on controller, or the mod's own mode.</summary>
+        private bool OnFoot(out Transform anchor)
         {
-            var fp = _footCam;
+            anchor = null;
+            if (!GuyActive) return false;
             var sys = sCameraSystem.instance;
-            return fp != null && sys != null && fp.working && _truckCam != null && _truckCam.car != null
-                   && _truckCam.car.GuyActive && sys.currentTarget == fp.transform;
+            if (_footCam != null && _footCam.isActiveAndEnabled)
+            {
+                if (_footCam.working && sys != null && sys.currentTarget == _footCam.transform) anchor = _footCam.transform;
+            }
+            else if (_vrFootFirstPerson && _footAnchor != null)
+            {
+                anchor = _footAnchor;
+            }
+            return anchor != null;
         }
 
         private void OnBeforeRender()
@@ -188,7 +203,8 @@ namespace EasyDeliveryVR.Rendering
             if (_cam == null || !XrRuntime.Running) return;
             if (!VrInput.TryGetHeadPose(out var pos, out var rot)) return;
 
-            var mode = InCab() ? ViewMode.Cab : OnFoot() ? ViewMode.OnFoot : ViewMode.Default;
+            Transform footAnchor = null;
+            var mode = InCab() ? ViewMode.Cab : OnFoot(out footAnchor) ? ViewMode.OnFoot : ViewMode.Default;
             if (mode != Mode)
             {
                 Plugin.Log.LogInfo($"VR: view mode {Mode} -> {mode}");
@@ -217,7 +233,7 @@ namespace EasyDeliveryVR.Rendering
                     AnchorRotation = Anchor.rotation; // rigid with the truck, including its tilt
                     break;
                 case ViewMode.OnFoot:
-                    Anchor = _footCam.transform;
+                    Anchor = footAnchor;
                     AnchorRotation = Quaternion.Euler(0f, Anchor.eulerAngles.y, 0f); // body yaw only
                     break;
                 default:
@@ -245,25 +261,55 @@ namespace EasyDeliveryVR.Rendering
         /// <summary>World rotation the tracked head is relative to (cab: truck pivot; on foot: body yaw).</summary>
         public static Quaternion AnchorRotation { get; private set; } = Quaternion.identity;
 
+        // The mod's own first-person on foot, used when the game's first-person add-on isn't active.
+        private sCharacterController _guy;
+        private Transform _footAnchor;
+        private bool _vrFootFirstPerson;
+        private bool _guyFirstPersonSet;
+        private Renderer[] _hiddenHead;
+
+        /// <summary>True while the right-stick tap is used by the mod (on foot), so it must not reach the game's camera toggle.</summary>
+        public static bool ConsumeCameraButton { get; private set; }
+
         private void UpdateOnFoot()
         {
-            if (_footCam == null)
+            if (_footCam == null) _footCam = FindFirstObjectByType<sFirstPersonController>();
+            if (_guy == null)
             {
-                _footCam = FindFirstObjectByType<sFirstPersonController>();
-                if (_footCam == null) return;
+                _guy = FindFirstObjectByType<sCharacterController>();
+                if (_guy != null)
+                {
+                    _vrFootFirstPerson = VrConfig.FirstPersonOnFoot.Value;
+                    _footAnchor = CreateFootAnchor(_guy);
+                }
             }
 
-            // Its Start coroutine restores the saved camera mode two frames in; switch to first person after that.
-            if (VrConfig.FirstPersonOnFoot.Value && !_footForcedThisScene && Time.timeSinceLevelLoad > 1f)
+            bool gameAddOn = _footCam != null && _footCam.isActiveAndEnabled;
+            ConsumeCameraButton = !gameAddOn && GuyActive;
+
+            if (gameAddOn)
             {
-                _footForcedThisScene = true;
-                _footCam.cameraMode = 2; // 2 = first person on foot, cab pivot in the truck
-                InterSceneData.SetInt("cameraMode", 2);
-                Plugin.Log.LogInfo($"VR: on-foot first person enabled (body '{_footCam.transform.parent?.name}')");
+                // Its Start coroutine restores the saved camera mode two frames in; switch to first person after that.
+                if (VrConfig.FirstPersonOnFoot.Value && !_footForcedThisScene && Time.timeSinceLevelLoad > 1f)
+                {
+                    _footForcedThisScene = true;
+                    _footCam.cameraMode = 2; // 2 = first person on foot, cab pivot in the truck
+                    InterSceneData.SetInt("cameraMode", 2);
+                    Plugin.Log.LogInfo("VR: on-foot first person enabled (game add-on)");
+                }
+            }
+            else if (_guy != null)
+            {
+                if (GuyActive && VrControllers.RightClickTapped)
+                {
+                    _vrFootFirstPerson = !_vrFootFirstPerson;
+                    Plugin.Log.LogInfo("VR: on-foot view " + (_vrFootFirstPerson ? "first person" : "over the head"));
+                }
+                ApplyVrFootFirstPerson(GuyActive && _vrFootFirstPerson);
             }
 
             if (Mode != ViewMode.OnFoot) return;
-            var body = _footCam.cc != null ? _footCam.cc.transform : _footCam.transform.parent;
+            var body = _guy != null ? _guy.transform : _footCam != null ? _footCam.transform.parent : null;
             if (body == null) return;
 
             // Turning: snap (default) or smooth, around the player's head so the view doesn't shift sideways.
@@ -280,6 +326,36 @@ namespace EasyDeliveryVR.Rendering
             }
             if (Mathf.Abs(x) < 0.3f) _turnLatched = false;
             if (angle != 0f) body.RotateAround(_cam.transform.position, Vector3.up, angle);
+        }
+
+        /// <summary>Eye point on the character: top of its capsule, facing the way it walks (the model faces backwards).</summary>
+        private static Transform CreateFootAnchor(sCharacterController guy)
+        {
+            var anchor = new GameObject("VR Foot Eye").transform;
+            anchor.SetParent(guy.transform, false);
+            float eye = 1.6f;
+            if (guy.TryGetComponent<CharacterController>(out var chc))
+                eye = chc.center.y + chc.height * 0.5f - 0.12f;
+            anchor.localPosition = new Vector3(0f, eye, 0f);
+            anchor.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            Plugin.Log.LogInfo($"VR: on-foot eye point at {eye:F2} m on '{guy.name}'");
+            return anchor;
+        }
+
+        private void ApplyVrFootFirstPerson(bool on)
+        {
+            if (on == _guyFirstPersonSet) return;
+            _guyFirstPersonSet = on;
+            // In first person the character turns only by look input (zeroed in VR, the mod snap-turns instead),
+            // rather than turning to face where it walks.
+            _guy.firstPerson = on;
+
+            if (_hiddenHead == null)
+            {
+                var app = FindFirstObjectByType<sAltAppearance>();
+                _hiddenHead = app != null && app.guyHead != null ? app.guyHead.GetComponentsInChildren<Renderer>(true) : new Renderer[0];
+            }
+            foreach (var r in _hiddenHead) if (r != null) r.enabled = !on;
         }
 
         /// <summary>Flat forward direction of the player's head in world space (for head-relative walking).</summary>
