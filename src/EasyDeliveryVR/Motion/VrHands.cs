@@ -196,8 +196,61 @@ namespace EasyDeliveryVR.Motion
             }
             Steering = steering;
 
+            UpdateGameHands();
+        }
+
+        // ---- The character's own hands ----
+
+        private sPlayerHands _playerHands;
+        private Renderer[] _guyHands = new Renderer[0];
+        private bool _skinned;
+        private bool _gameHandsHidden;
+
+        /// <summary>
+        /// The game's hands are textured spheres (cab: Car/carInt/LeftHand, on foot: guy_model/Left/RightHand).
+        /// Give the VR hands the same mesh and material, and hide the game's hands while the VR ones show.
+        /// </summary>
+        private void UpdateGameHands()
+        {
+            if (_playerHands == null && Time.frameCount % 60 == 0)
+            {
+                _playerHands = FindFirstObjectByType<sPlayerHands>();
+                if (_playerHands != null)
+                {
+                    var list = new System.Collections.Generic.List<Renderer>();
+                    foreach (var go in new[] { _playerHands.leftHand, _playerHands.rightHand })
+                        if (go != null) list.AddRange(go.GetComponentsInChildren<Renderer>(true));
+                    _guyHands = list.ToArray();
+                }
+            }
+
+            if (!_skinned && _gameHand != null && _gameHand.Length > 0 && _gameHand[0] is MeshRenderer src
+                && src.TryGetComponent<MeshFilter>(out var srcMf) && srcMf.sharedMesh != null)
+            {
+                _skinned = true;
+                foreach (var h in new[] { _l, _r })
+                {
+                    if (h.Visual == null) continue;
+                    h.Visual.GetComponent<MeshFilter>().sharedMesh = srcMf.sharedMesh;
+                    // Copies: the VR hands outlive the scene, the game's materials may not.
+                    h.Visual.GetComponent<Renderer>().sharedMaterials =
+                        System.Array.ConvertAll(src.sharedMaterials, m => m != null ? new Material(m) : null);
+                    h.Visual.localScale = src.transform.lossyScale; // same size as the hand on the wheel
+                }
+                Plugin.Log.LogInfo($"VR hands: using the game's hand mesh '{srcMf.sharedMesh.name}' ({src.sharedMaterial?.name})");
+            }
+
+            // Hide the game's hands wherever the VR hands stand in for them.
+            bool cab = ShowHands && VrCameraManager.Mode == VrCameraManager.ViewMode.Cab;
+            // OnFoot is first person only; in the over-the-head view (Default) the character keeps its own hands.
+            bool foot = ShowHands && VrCameraManager.Mode == VrCameraManager.ViewMode.OnFoot;
             if (_gameHand != null)
-                foreach (var r in _gameHand) if (r != null) r.enabled = !steering;
+                foreach (var r in _gameHand) if (r != null) r.enabled = !(cab || Steering);
+            if (foot != _gameHandsHidden)
+            {
+                _gameHandsHidden = foot;
+                foreach (var r in _guyHands) if (r != null) r.enabled = !foot;
+            }
         }
 
         // ---- Haptics ----
