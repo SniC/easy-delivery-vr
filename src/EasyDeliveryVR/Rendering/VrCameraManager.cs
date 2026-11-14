@@ -2,19 +2,30 @@ using EasyDeliveryVR.Xr;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using UnityEngine.XR;
-using CommonUsages = UnityEngine.XR.CommonUsages;
 
 namespace EasyDeliveryVR.Rendering
 {
     /// <summary>
-    /// Sends the game camera to the headset and applies head tracking on top of the game's camera pose.
-    /// The game resets its camera to the pivot every LateUpdate (sCameraSystem), so we apply the
-    /// head pose in Application.onBeforeRender, which runs after all LateUpdates.
+    /// Sends the game camera to the headset and applies head tracking.
+    ///
+    /// Two modes:
+    ///  - Cab: the truck's first-person camera. The camera is rigidly attached to the truck's
+    ///    firstPersonPivot (ignoring the game's smoothing/look-ahead) plus the tracked head pose.
+    ///  - Default: head pose applied on top of whatever pose the game gave the camera.
+    ///
+    /// The game resets its camera every LateUpdate (sCameraSystem), so the pose is applied in
+    /// Application.onBeforeRender, which runs after all LateUpdates.
     /// </summary>
     internal class VrCameraManager : MonoBehaviour
     {
+        public enum ViewMode { None, Default, Cab }
+
+        public static ViewMode Mode { get; private set; }
+
         private Camera _cam;
+        private sCameraController _truckCam;
+        private bool _cabForcedThisScene;
+
         private Vector3 _originPos;
         private Quaternion _originRot = Quaternion.identity;
         private bool _needsRecenter = true;
@@ -34,6 +45,8 @@ namespace EasyDeliveryVR.Rendering
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             _cam = null;
+            _truckCam = null;
+            _cabForcedThisScene = false;
             _needsRecenter = true;
         }
 
@@ -41,13 +54,14 @@ namespace EasyDeliveryVR.Rendering
 
         private void Update()
         {
+            VrControllers.Update();
             var kb = Keyboard.current;
-            if (kb != null && kb.f8Key.wasPressedThisFrame) Recenter();
-            if (VrInput.Button(false, CommonUsages.primary2DAxisClick) && VrInput.Button(true, CommonUsages.primary2DAxisClick))
-                Recenter();
+            if ((kb != null && kb.f8Key.wasPressedThisFrame) || VrControllers.RightClickHeld) Recenter();
 
             if (_cam == null || !_cam.isActiveAndEnabled) FindAndSetupCamera();
             else if (_cam.targetTexture != null) _cam.targetTexture = null; // game may re-assign it
+
+            if (_truckCam == null) FindTruckCamera();
         }
 
         private void FindAndSetupCamera()
@@ -83,10 +97,51 @@ namespace EasyDeliveryVR.Rendering
             _needsRecenter = true;
         }
 
+        private void FindTruckCamera()
+        {
+            var tc = FindFirstObjectByType<sCameraController>();
+            if (tc == null || tc.car == null || tc.firstPersonPivot == null) return;
+            _truckCam = tc;
+
+            if (VrConfig.SmoothTruckPhysics.Value && tc.car.rb != null && tc.car.rb.interpolation == RigidbodyInterpolation.None)
+            {
+                tc.car.rb.interpolation = RigidbodyInterpolation.Interpolate;
+                Plugin.Log.LogInfo("VR: enabled truck rigidbody interpolation");
+            }
+
+            if (VrConfig.ForceCabView.Value && !_cabForcedThisScene)
+            {
+                _cabForcedThisScene = true;
+                tc.firstPerson = true;
+                tc.firstPersonMode = true;
+                foreach (var hack in FindObjectsByType<FirstPersonCameraHack>(FindObjectsSortMode.None))
+                    if (hack.realCamera == tc) hack.setToFirstPerson = true;
+                Plugin.Log.LogInfo("VR: switched truck camera to cab view");
+            }
+        }
+
+        private bool InCab()
+        {
+            var tc = _truckCam;
+            var sys = sCameraSystem.instance;
+            return tc != null && sys != null
+                   && tc.firstPerson && !tc.fixedPerspective
+                   && tc.car != null && !tc.car.GuyActive
+                   && sys.currentTarget == tc.camPivot.transform;
+        }
+
         private void OnBeforeRender()
         {
             if (_cam == null || !XrRuntime.Running) return;
             if (!VrInput.TryGetHeadPose(out var pos, out var rot)) return;
+
+            var mode = InCab() ? ViewMode.Cab : ViewMode.Default;
+            if (mode != Mode)
+            {
+                Plugin.Log.LogInfo($"VR: view mode {Mode} -> {mode}");
+                Mode = mode;
+                _needsRecenter = true;
+            }
 
             if (_needsRecenter)
             {
@@ -99,8 +154,19 @@ namespace EasyDeliveryVR.Rendering
             }
 
             var inv = Quaternion.Inverse(_originRot);
-            _cam.transform.localPosition = inv * (pos - _originPos);
-            _cam.transform.localRotation = inv * rot;
+            var headPos = inv * (pos - _originPos);
+            var headRot = inv * rot;
+
+            if (mode == ViewMode.Cab)
+            {
+                var pivot = _truckCam.firstPersonPivot;
+                _cam.transform.SetPositionAndRotation(pivot.position + pivot.rotation * headPos, pivot.rotation * headRot);
+            }
+            else
+            {
+                _cam.transform.localPosition = headPos;
+                _cam.transform.localRotation = headRot;
+            }
         }
     }
 }
