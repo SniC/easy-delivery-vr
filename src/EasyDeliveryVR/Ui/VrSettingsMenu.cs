@@ -85,6 +85,7 @@ namespace EasyDeliveryVR.Ui
             AddBool("Show hands", VrConfig.ShowHands, "On", "Off");
             AddBool("Grab things by hand (on foot)", VrConfig.HandGrab, "On", "Off");
             AddBool("Camera shake", VrConfig.DisableCameraShake, "Off", "On");
+            AddBool("Retro vertex wobble", VrConfig.RetroVertexSnap, "On", "Off");
             AddChoice("Seat left/right", VrConfig.SeatOffsetX, Steps(-0.15f, 0.15f, 0.01f), v => $"{v * 100:+0;-0;0} cm");
             AddChoice("Seat height", VrConfig.SeatOffsetY, Steps(-0.2f, 0.2f, 0.02f), v => $"{v * 100:+0;-0;0} cm");
             AddChoice("Seat forward/back", VrConfig.SeatOffsetZ, Steps(-0.2f, 0.2f, 0.02f), v => $"{v * 100:+0;-0;0} cm");

@@ -105,7 +105,6 @@ namespace EasyDeliveryVR.Motion
                 _ppMoved = true;
                 _ppLocalPos = pp.localPosition;
                 _ppLocalRot = pp.localRotation;
-                SetCrisp(pp, true);
             }
             pp.position = pos + rot * new Vector3(0f, -0.05f, 0.18f);
         }
@@ -115,34 +114,7 @@ namespace EasyDeliveryVR.Motion
             if (!_ppMoved) return;
             _ppMoved = false;
             if (_ci != null && _ci.packagePoint != null)
-            {
-                SetCrisp(_ci.packagePoint, false);
                 _ci.packagePoint.SetLocalPositionAndRotation(_ppLocalPos, _ppLocalRot);
-            }
-        }
-
-        private static readonly int VertexResolution = Shader.PropertyToID("_VertexResolution");
-        private static MaterialPropertyBlock _mpb;
-
-        /// <summary>
-        /// The game's retro shader snaps vertices to a coarse grid (_VertexResolution). On an object moving
-        /// with a tracked hand that makes it jump and swim; switch the snapping off while it's carried.
-        /// </summary>
-        private static void SetCrisp(Transform root, bool on)
-        {
-            if (_mpb == null) _mpb = new MaterialPropertyBlock();
-            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
-            {
-                bool snaps = false;
-                foreach (var m in r.sharedMaterials)
-                    if (m != null && m.HasProperty(VertexResolution)) snaps = true;
-                if (!snaps) continue;
-                r.GetPropertyBlock(_mpb);
-                if (on) _mpb.SetVector(VertexResolution, new Vector4(10000f, 10000f, 10000f, 0f));
-                else _mpb.Clear();
-                r.SetPropertyBlock(_mpb);
-                if (on) Plugin.Log.LogInfo($"VR grab: vertex snapping off on '{r.name}' ({r.sharedMaterial?.shader.name})");
-            }
         }
 
         private static bool TryHandPose(bool left, out Vector3 pos, out Quaternion rot)

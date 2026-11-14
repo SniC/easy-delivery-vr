@@ -46,6 +46,7 @@ namespace EasyDeliveryVR
                 host.AddComponent<VrSettingsMenu>();
                 host.AddComponent<Motion.VrGrab>();
                 host.AddComponent<VrVignette>();
+                host.AddComponent<VrVertexSnap>();
             }
             else
                 Log.LogInfo("VR not started; game runs flat.");

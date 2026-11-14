@@ -27,6 +27,7 @@ namespace EasyDeliveryVR
         public static ConfigEntry<bool> HandGrab;
         public static ConfigEntry<float> GrabRadius;
         public static ConfigEntry<float> Vignette;
+        public static ConfigEntry<bool> RetroVertexSnap;
 
         public static void Bind(ConfigFile cfg)
         {
@@ -59,6 +60,8 @@ namespace EasyDeliveryVR
                 "In first person on foot: grip near a package, door, truck bed or item to use it; grip again to put a carried package down where your hand is.");
             GrabRadius = cfg.Bind("Hands", "GrabRadius", 0.35f, "How close (meters) your hand must be to something to grab or use it.");
             Vignette = cfg.Bind("Comfort", "Vignette", 0f, "Darken the edges of the view while the view turns artificially (0 = off, 1 = strong).");
+            RetroVertexSnap = cfg.Bind("Comfort", "RetroVertexSnap", false,
+                "Keep the game's retro vertex snapping (models snap to a 2 cm grid). In VR this makes nearby objects jump with every head/hand movement.");
             ScreenDistance = cfg.Bind("UI", "ScreenDistance", 2.0f, "Distance in meters of the virtual screen showing HUD and menus.");
             ScreenFov = cfg.Bind("UI", "ScreenFov", 50f, "Vertical size in degrees of the virtual screen showing HUD and menus.");
             LaserPitch = cfg.Bind("UI", "LaserPitch", 30f,
