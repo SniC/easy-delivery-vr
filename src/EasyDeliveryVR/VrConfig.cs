@@ -17,6 +17,10 @@ namespace EasyDeliveryVR
         public static ConfigEntry<bool> SmoothTurn;
         public static ConfigEntry<float> SnapTurnAngle;
         public static ConfigEntry<float> SmoothTurnSpeed;
+        public static ConfigEntry<bool> ShowHands;
+        public static ConfigEntry<float> WheelLockDegrees;
+        public static ConfigEntry<float> WheelGrabDistance;
+        public static ConfigEntry<float> HapticStrength;
 
         public static void Bind(ConfigFile cfg)
         {
@@ -33,6 +37,11 @@ namespace EasyDeliveryVR
             SmoothTurn = cfg.Bind("OnFoot", "SmoothTurn", false, "Turn smoothly with the right stick instead of in snap steps.");
             SnapTurnAngle = cfg.Bind("OnFoot", "SnapTurnAngle", 30f, "Degrees per snap turn.");
             SmoothTurnSpeed = cfg.Bind("OnFoot", "SmoothTurnSpeed", 120f, "Degrees per second for smooth turning.");
+            ShowHands = cfg.Bind("Hands", "ShowHands", true, "Show simple hands at the controllers in the cab and in first person on foot.");
+            WheelLockDegrees = cfg.Bind("Hands", "WheelLockDegrees", 270f,
+                "How far (degrees) you turn the steering wheel by hand for full steering lock. Lower = more responsive.");
+            WheelGrabDistance = cfg.Bind("Hands", "WheelGrabDistance", 0.12f, "How close (meters) a hand must be to the wheel rim to grab it with the grip.");
+            HapticStrength = cfg.Bind("Hands", "HapticStrength", 1f, "Controller vibration strength for bumps and crashes (0 = off).");
             ScreenDistance = cfg.Bind("UI", "ScreenDistance", 2.0f, "Distance in meters of the virtual screen showing HUD and menus.");
             ScreenFov = cfg.Bind("UI", "ScreenFov", 50f, "Vertical size in degrees of the virtual screen showing HUD and menus.");
             LaserPitch = cfg.Bind("UI", "LaserPitch", 30f,

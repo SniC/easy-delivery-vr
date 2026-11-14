@@ -79,8 +79,11 @@ namespace EasyDeliveryVR.Patches
             __instance.inventoryHeld |= L.Primary;
             __instance.mapPressed |= VrControllers.Pressed(L.Secondary, pL.Secondary);
             __instance.pausePressed |= VrControllers.Pressed(L.Menu, pL.Menu);
-            __instance.hornPressed |= VrControllers.Pressed(R.GripButton, pR.GripButton);
-            __instance.radioPressed |= VrControllers.Pressed(L.GripButton, pL.GripButton);
+            // Grips grab the steering wheel when a hand is on or near it; otherwise horn (right) / radio (left).
+            if (!Motion.VrHands.RightBusy)
+                __instance.hornPressed |= VrControllers.Pressed(R.GripButton, pR.GripButton);
+            if (!Motion.VrHands.LeftBusy)
+                __instance.radioPressed |= VrControllers.Pressed(L.GripButton, pL.GripButton);
             __instance.headlightsPressed |= VrControllers.LeftClickTapped;
             __instance.resetHeld |= VrControllers.LeftClickHeld;
             if (!Rendering.VrCameraManager.ConsumeCameraButton)
