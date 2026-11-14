@@ -8,6 +8,9 @@ namespace EasyDeliveryVR
         public static ConfigEntry<bool> ForceCabView;
         public static ConfigEntry<bool> DisableCameraShake;
         public static ConfigEntry<bool> SmoothTruckPhysics;
+        public static ConfigEntry<float> ScreenDistance;
+        public static ConfigEntry<float> ScreenFov;
+        public static ConfigEntry<bool> DebugSnapshots;
 
         public static void Bind(ConfigFile cfg)
         {
@@ -17,6 +20,10 @@ namespace EasyDeliveryVR
             DisableCameraShake = cfg.Bind("Comfort", "DisableCameraShake", true, "Disable the acceleration-based camera shake.");
             SmoothTruckPhysics = cfg.Bind("Comfort", "SmoothTruckPhysics", true,
                 "Enable rigidbody interpolation on the truck so the cab doesn't judder at headset refresh rates.");
+            ScreenDistance = cfg.Bind("UI", "ScreenDistance", 2.0f, "Distance in meters of the virtual screen showing HUD and menus.");
+            ScreenFov = cfg.Bind("UI", "ScreenFov", 50f, "Vertical size in degrees of the virtual screen showing HUD and menus.");
+            DebugSnapshots = cfg.Bind("Debug", "AutoSnapshots", true,
+                "Save a flat image of the VR view to BepInEx/vr_snapshots 8 s after each scene load (F9 any time). The headset blinks once when it happens.");
         }
     }
 }

@@ -22,6 +22,9 @@ namespace EasyDeliveryVR.Rendering
 
         public static ViewMode Mode { get; private set; }
 
+        /// <summary>Transform the tracked head is relative to (after recentering): truck pivot in the cab, else the camera's parent.</summary>
+        public static Transform Anchor { get; private set; }
+
         private Camera _cam;
         private sCameraController _truckCam;
         private bool _cabForcedThisScene;
@@ -172,6 +175,8 @@ namespace EasyDeliveryVR.Rendering
             var inv = Quaternion.Inverse(_originRot);
             var headPos = inv * (pos - _originPos);
             var headRot = inv * rot;
+
+            Anchor = mode == ViewMode.Cab ? _truckCam.firstPersonPivot : _cam.transform.parent;
 
             if (mode == ViewMode.Cab)
             {

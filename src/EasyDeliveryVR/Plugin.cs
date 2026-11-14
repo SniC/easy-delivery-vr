@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Logging;
 using EasyDeliveryVR.Rendering;
+using EasyDeliveryVR.Ui;
 using EasyDeliveryVR.Xr;
 using HarmonyLib;
 using UnityEngine;
@@ -36,7 +37,11 @@ namespace EasyDeliveryVR
             host.AddComponent<Diagnostics>();
 
             if (VrConfig.EnableVr.Value && XrRuntime.Start())
+            {
                 host.AddComponent<VrCameraManager>();
+                host.AddComponent<VrScreenMirror>();
+                host.AddComponent<VrSnapshot>();
+            }
             else
                 Log.LogInfo("VR not started; game runs flat.");
         }

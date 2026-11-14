@@ -47,6 +47,7 @@ namespace EasyDeliveryVR.Patches
             __instance.playerInput = Combine(__instance.playerInput, MirrorMode.mirrored && !PauseSystem.paused ? new Vector2(-stick.x, stick.y) : stick);
             __instance.radioInput = Combine(__instance.radioInput, stick);
             __instance.cameraLook = Combine(__instance.cameraLook, Dz(R.Stick));
+            __instance.mouseInput = Combine(__instance.mouseInput, Dz(R.Stick)); // menu cursor
 
             __instance.selectPressed |= VrControllers.Pressed(R.Primary, pR.Primary);
             __instance.selectReleased |= VrControllers.Pressed(pR.Primary, R.Primary);
