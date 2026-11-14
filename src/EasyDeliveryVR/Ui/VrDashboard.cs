@@ -262,6 +262,18 @@ namespace EasyDeliveryVR.Ui
                 var forward = -normal; // +z into the dashboard, mesh faces the driver
                 var panelUp = Vector3.Cross(forward, right.normalized);
                 var rot = Quaternion.LookRotation(forward, panelUp);
+
+                if (i == 0)
+                {
+                    // Instrument cluster: stand it upright on the recess behind the wheel, tilted back to face the
+                    // driver's eye (pitch only, no yaw/roll), with its bottom edge resting on the surface.
+                    var side = Vector3.Cross(up, fwd).normalized;
+                    var toPanel = Vector3.ProjectOnPlane(pos - eye, side).normalized;
+                    var uprightUp = Vector3.Cross(toPanel, side);
+                    float halfHeight = _gaugeMesh != null ? _gaugeMesh.bounds.extents.y : 0.025f;
+                    pos += uprightUp * (halfHeight + 0.004f);
+                    rot = Quaternion.LookRotation(toPanel, uprightUp);
+                }
                 _local[i] = new Pose(basis.InverseTransformPoint(pos), Quaternion.Inverse(basis.rotation) * rot);
             }
             if (!_placed) Plugin.Log.LogInfo($"VR dashboard: placed panels, {hits}/2 on the dashboard surface");
