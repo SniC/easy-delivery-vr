@@ -286,17 +286,42 @@ namespace EasyDeliveryVR.Motion
 
         // ---- Haptics ----
 
-        private void UpdateHaptics(bool inCab)
+        private void UpdateHaptics(bool inCab) => _hapticsInCab = inCab;
+
+        private bool _hapticsInCab;
+        private Vector3 _smoothDv;
+
+        /// <summary>
+        /// Rumble for bumps, landings and crashes only. Measured per physics step (the truck's velocity only
+        /// changes there), as the sudden part of the velocity change: steady accelerating, braking and cornering
+        /// are filtered out. VR controller actuators are much stronger than gamepad motors at the same value,
+        /// so the scale is gentle; Vibration in the VR settings scales it further.
+        /// </summary>
+        private void FixedUpdate()
         {
-            if (!inCab || _car == null || _car.rb == null || VrConfig.HapticStrength.Value <= 0f) { _prevVel = Vector3.zero; return; }
+            float strength = VrConfig.HapticStrength.Value;
+            if (!_hapticsInCab || _car == null || _car.rb == null || strength <= 0f || PauseSystem.paused)
+            {
+                _prevVel = Vector3.zero;
+                _smoothDv = Vector3.zero;
+                return;
+            }
             var vel = _car.transform.InverseTransformDirection(_car.rb.linearVelocity);
-            var accel = vel - _prevVel; // per frame, like the game's ReactiveRumble
+            bool first = _prevVel == Vector3.zero;
+            var dv = vel - _prevVel; // m/s per physics step
             _prevVel = vel;
+            if (first) return;
+            _smoothDv = Vector3.Lerp(_smoothDv, dv, 0.1f); // the steady part (engine, brakes, cornering)
             if (_car.Airbourne()) return;
-            float amp = Mathf.Clamp01(accel.magnitude / 10f * VrConfig.HapticStrength.Value * 4f);
-            if (amp < 0.04f) return;
-            Haptic(true, amp * (_l.Grabbing ? 1f : 0.5f), 0.05f);
-            Haptic(false, amp * (_r.Grabbing ? 1f : 0.5f), 0.05f);
+
+            float jolt = (dv - _smoothDv).magnitude;
+            const float threshold = 0.15f; // m/s in one step: below this it's just the road
+            if (jolt < threshold) return;
+            float amp = Mathf.Clamp01((jolt - threshold) / 2f) * 0.5f * strength; // max 0.5 at Vibration 100%
+            if (amp < 0.03f) return;
+            float seconds = Time.fixedDeltaTime * 1.5f;
+            Haptic(true, amp * (_l.Grabbing ? 1f : 0.6f), seconds);
+            Haptic(false, amp * (_r.Grabbing ? 1f : 0.6f), seconds);
         }
 
         public static void Haptic(bool left, float amplitude, float seconds)
