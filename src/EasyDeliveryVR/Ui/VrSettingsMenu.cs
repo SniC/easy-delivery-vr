@@ -35,6 +35,7 @@ namespace EasyDeliveryVR.Ui
         }
 
         private readonly List<Item> _items = new List<Item>();
+        private const int VisibleItems = 18;
         private int _selected;
         private Transform _panel;
         private TextMesh _text;
@@ -84,7 +85,16 @@ namespace EasyDeliveryVR.Ui
             AddChoice("Menu/HUD size", VrConfig.ScreenFov, new[] { 35f, 40f, 45f, 50f, 60f }, v => $"{v:F0}°");
             AddBool("Menu screen on left hand", VrConfig.MenuOnHand, "On (first person)", "Off (floating)");
             AddBool("Truck info on dashboard", VrConfig.DashboardHud, "On", "Off (floating HUD)");
-            AddChoice("Dashboard display height", VrConfig.DashboardHeight, Steps(-0.2f, 0.2f, 0.02f), v => $"{v * 100:+0;-0;0} cm");
+            var cm = Steps(-0.3f, 0.3f, 0.01f);
+            System.Func<float, string> fmtCm = v => $"{v * 100:+0;-0;0} cm";
+            var sizes = new[] { 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1f, 1.1f, 1.25f, 1.5f, 1.75f, 2f, 2.5f, 3f };
+            System.Func<float, string> fmtSize = v => $"{v * 100:F0}%";
+            AddChoice("  Wheel screen left/right", VrConfig.ClusterX, cm, fmtCm);
+            AddChoice("  Wheel screen up/down", VrConfig.ClusterY, cm, fmtCm);
+            AddChoice("  Wheel screen size", VrConfig.ClusterSize, sizes, fmtSize);
+            AddChoice("  Center screen left/right", VrConfig.CenterX, cm, fmtCm);
+            AddChoice("  Center screen up/down", VrConfig.CenterY, cm, fmtCm);
+            AddChoice("  Center screen size", VrConfig.CenterSize, sizes, fmtSize);
             AddBool("Show hands", VrConfig.ShowHands, "On", "Off");
             AddBool("Grab things by hand (on foot)", VrConfig.HandGrab, "On", "Off");
             AddBool("Camera shake", VrConfig.DisableCameraShake, "Off", "On");
@@ -242,13 +252,18 @@ namespace EasyDeliveryVR.Ui
             var sb = new StringBuilder();
             sb.Append("<b>VR SETTINGS</b>\n");
             sb.Append("<size=40><color=#999999>left stick: choose / change   A: change   B or hold Y: close</color></size>\n\n");
-            for (int i = 0; i < _items.Count; i++)
+            // Scrolling window: the list is longer than the panel.
+            int first = Mathf.Clamp(_selected - VisibleItems / 2, 0, Mathf.Max(0, _items.Count - VisibleItems));
+            int last = Mathf.Min(_items.Count, first + VisibleItems);
+            sb.Append(first > 0 ? "<color=#999999>    (more above)</color>\n" : "\n");
+            for (int i = first; i < last; i++)
             {
                 var it = _items[i];
                 bool sel = i == _selected;
                 string line = $"{it.Name}:  {it.Value()}";
                 sb.Append(sel ? $"<color=#ffd24a>>  {line}   < ></color>\n" : $"<color=#dddddd>    {line}</color>\n");
             }
+            if (last < _items.Count) sb.Append("<color=#999999>    (more below)</color>\n");
             _text.text = sb.ToString();
         }
     }

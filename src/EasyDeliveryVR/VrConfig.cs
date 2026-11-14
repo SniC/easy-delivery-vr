@@ -31,6 +31,7 @@ namespace EasyDeliveryVR
         public static ConfigEntry<bool> DashboardHud;
         public static ConfigEntry<bool> MenuOnHand;
         public static ConfigEntry<float> DashboardHeight;
+        public static ConfigEntry<float> ClusterX, ClusterY, ClusterSize, CenterX, CenterY, CenterSize;
 
         public static void Bind(ConfigFile cfg)
         {
@@ -41,7 +42,7 @@ namespace EasyDeliveryVR
                 "When recentering in the cab, line your head up sideways with the steering wheel's center.");
             SeatOffsetX = cfg.Bind("Driving", "SeatOffsetRight", 0f, "Extra seat offset in meters: positive = to the right.");
             SeatOffsetY = cfg.Bind("Driving", "SeatOffsetUp", 0f, "Extra seat offset in meters: positive = higher.");
-            SeatOffsetZ = cfg.Bind("Driving", "SeatOffsetForward", 0f, "Extra seat offset in meters: positive = closer to the windshield.");
+            SeatOffsetZ = cfg.Bind("Driving", "SeatOffsetForward", -0.1f, "Extra seat offset in meters: positive = closer to the windshield.");
             CabTilt = cfg.Bind("Comfort", "CabTilt", 0f,
                 "How much the cab view follows the truck's roll and pitch (bumps, body sway): 0 = level horizon, follows heading only; 1 = fully rigid with the truck.");
             DisableCameraShake = cfg.Bind("Comfort", "DisableCameraShake", true, "Disable the acceleration-based camera shake.");
@@ -69,7 +70,13 @@ namespace EasyDeliveryVR
                 "In the cab, show fuel, energy, money, time and the radio on a display above the steering wheel instead of on the floating HUD.");
             MenuOnHand = cfg.Bind("UI", "MenuOnHand", true,
                 "In first person (cab and on foot), show the menu / computer screen on your left hand like a tablet; point at it with the right hand.");
-            DashboardHeight = cfg.Bind("UI", "DashboardHeight", 0f, "Extra height in meters of the dashboard display (negative = lower).");
+            DashboardHeight = cfg.Bind("UI", "DashboardHeight", 0f, "Extra height in meters of where both dashboard screens are aimed (negative = lower).");
+            ClusterX = cfg.Bind("UI", "WheelScreenRight", 0f, "Screen behind the wheel (fuel, time): move right in meters (negative = left).");
+            ClusterY = cfg.Bind("UI", "WheelScreenUp", 0f, "Screen behind the wheel: move up in meters (negative = down).");
+            ClusterSize = cfg.Bind("UI", "WheelScreenSize", 1f, "Screen behind the wheel: size multiplier.");
+            CenterX = cfg.Bind("UI", "CenterScreenRight", 0f, "Center dashboard screen (radio, money, distance): move right in meters.");
+            CenterY = cfg.Bind("UI", "CenterScreenUp", 0f, "Center dashboard screen: move up in meters.");
+            CenterSize = cfg.Bind("UI", "CenterScreenSize", 1f, "Center dashboard screen: size multiplier.");
             ScreenDistance = cfg.Bind("UI", "ScreenDistance", 2.0f, "Distance in meters of the virtual screen showing HUD and menus.");
             ScreenFov = cfg.Bind("UI", "ScreenFov", 50f, "Vertical size in degrees of the virtual screen showing HUD and menus.");
             LaserPitch = cfg.Bind("UI", "LaserPitch", 30f,

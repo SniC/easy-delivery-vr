@@ -22,7 +22,7 @@ namespace EasyDeliveryVR.Ui
         /// </summary>
         public const int Queue = 2500;
 
-        private const float MetersPerPixel = 0.0012f;
+        private const float BigMetersPerPixel = 0.0015f; // the combined dashboard screen: ~22 x 15 cm
 
         private sHUD _hud;
         private InteriorInteraction _wheel;
@@ -79,8 +79,11 @@ namespace EasyDeliveryVR.Ui
             if (_mat.shader != sm.shader) _mat.shader = sm.shader;
             _mat.CopyPropertiesFromMaterial(sm);
             _mat.renderQueue = Queue + 1;
-            if (_mat.HasProperty("_ZTest")) _mat.SetInt("_ZTest", (int)CompareFunction.LessEqual);
-            _mat.SetInt("unity_GUIZTestMode", (int)CompareFunction.LessEqual);
+            // Over the dashboard (so its edges can't swallow part of a screen), under the wheel and hands,
+            // which render after the screens (WheelQueue, VrHands.HandQueue).
+            if (_mat.HasProperty("_ZTest")) _mat.SetInt("_ZTest", (int)CompareFunction.Always);
+            _mat.SetInt("unity_GUIZTestMode", (int)CompareFunction.Always);
+            DrawWheelAfterScreens();
 
             bool visible = copy.enabled; // follows the HUD (hidden while paused, in cam.exe, ...)
             _root.gameObject.SetActive(visible);
@@ -88,6 +91,26 @@ namespace EasyDeliveryVR.Ui
         }
 
         private void OnDisable() => RestoreFloating();
+
+        private const int WheelQueue = Queue + 50;
+        private Transform _queuedWheel;
+
+        /// <summary>
+        /// The steering wheel gets its own material copies drawn after the screens, so it still covers them.
+        /// (The interior shares one material, so only the wheel's renderers get copies.)
+        /// </summary>
+        private void DrawWheelAfterScreens()
+        {
+            var wt = _wheel.steeringWheel;
+            if (_queuedWheel == wt) return;
+            _queuedWheel = wt;
+            foreach (var r in wt.GetComponentsInChildren<Renderer>(true))
+            {
+                var mats = r.materials; // per-renderer instances
+                foreach (var m in mats) if (m != null) m.renderQueue = WheelQueue;
+                r.materials = mats;
+            }
+        }
 
         private void RestoreFloating()
         {
@@ -131,7 +154,13 @@ namespace EasyDeliveryVR.Ui
             for (int i = 0; i < 2; i++)
             {
                 var t = (i == 0 ? _gauges : _radio).transform;
-                t.SetPositionAndRotation(basis.TransformPoint(_local[i].position), basis.rotation * _local[i].rotation);
+                // The player's own adjustments (VR settings), in the screen's plane: right / up and size.
+                var offset = i == 0 ? new Vector3(VrConfig.ClusterX.Value, VrConfig.ClusterY.Value, 0f)
+                                    : new Vector3(VrConfig.CenterX.Value, VrConfig.CenterY.Value, 0f);
+                float size = Mathf.Clamp(i == 0 ? VrConfig.ClusterSize.Value : VrConfig.CenterSize.Value, 0.25f, 4f);
+                var rot = basis.rotation * _local[i].rotation;
+                t.SetPositionAndRotation(basis.TransformPoint(_local[i].position) + rot * offset, rot);
+                t.localScale = Vector3.one * size;
             }
         }
 
@@ -268,12 +297,12 @@ namespace EasyDeliveryVR.Ui
                 if (i == 0)
                 {
                     // Instrument cluster: stand it upright on the recess behind the wheel, tilted back to face the
-                    // driver's eye (pitch only, no yaw/roll), with its bottom edge resting on the surface.
+                    // driver's eye (pitch only, no yaw/roll).
                     var side = Vector3.Cross(up, fwd).normalized;
                     var toPanel = Vector3.ProjectOnPlane(pos - eye, side).normalized;
                     var uprightUp = Vector3.Cross(toPanel, side);
-                    float halfHeight = _gaugeMesh != null ? _gaugeMesh.bounds.extents.y : 0.025f;
-                    pos += uprightUp * (halfHeight + 0.004f);
+                    // Centered just above the spot seen through the wheel (it's drawn over the dashboard, so it may dip into it).
+                    pos += uprightUp * 0.008f;
                     rot = Quaternion.LookRotation(toPanel, uprightUp);
                 }
                 _local[i] = new Pose(basis.InverseTransformPoint(pos), Quaternion.Inverse(basis.rotation) * rot);
@@ -358,14 +387,22 @@ namespace EasyDeliveryVR.Ui
             //                  [money / time       ]
             var bars = Rect.MinMaxRect(68, h / 2 + 4, 100, h / 2 + 52);    // energy bars + fuel gauge (y ~132..178)
             var distance = Rect.MinMaxRect(68, 98, 140, 118);              // DrawDeliveryIndicator (70,100) + "123m"
-            var money = Rect.MinMaxRect(68, h - 68, 140, h - 40);          // money (h-66) and time (h-54)
+            var money = Rect.MinMaxRect(68, h - 68, 140, h - 56);          // money (h-66)
+            var time = Rect.MinMaxRect(68, h - 56, 140, h - 40);           // time (h-54)
             var radio = Rect.MinMaxRect(w - 212, h - 80, w - 68, h - 36); // scan, fm frequency, song
 
-            SetPanel(_gauges, ref _gaugeMesh, w, h, 0.0011f,
-                new Part(bars, 0, 0), new Part(distance, bars.width + 4, 0), new Part(money, bars.width + 4, bars.height - money.height));
-            SetPanel(_radio, ref _radioMesh, w, h, MetersPerPixel, new Part(radio, 0, 0));
+            // Behind the wheel (small, to fit the wheel's opening): [energy|fuel] [time]
+            SetPanel(_gauges, ref _gaugeMesh, w, h, 0.0008f,
+                new Part(bars, 0, 0), new Part(time, bars.width + 6, bars.height - time.height));
 
-            _holedMesh = HoledQuad(new[] { Uv(bars, w, h), Uv(distance, w, h), Uv(money, w, h), Uv(radio, w, h) });
+            // Center of the dashboard (big):
+            //   [radio: scan / fm / song]
+            //   [money]  [distance      ]
+            float row2 = radio.height + 6;
+            SetPanel(_radio, ref _radioMesh, w, h, BigMetersPerPixel,
+                new Part(radio, 0, 0), new Part(money, 0, row2), new Part(distance, money.width + 6, row2));
+
+            _holedMesh = HoledQuad(new[] { Uv(bars, w, h), Uv(distance, w, h), Uv(money, w, h), Uv(time, w, h), Uv(radio, w, h) });
         }
 
         private void SetPanel(Renderer r, ref Mesh mesh, int w, int h, float metersPerPixel, params Part[] parts)
