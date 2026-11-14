@@ -18,7 +18,7 @@ A VR mod for Easy Delivery Co (BepInEx 5 + Unity's OpenXR plugin injected at run
 | M0 | BepInEx plugin scaffold | done |
 | M1 | OpenXR injection, stereo + head tracking, recenter | done (SteamVR) |
 | M2 | Comfort (fixed FOV, no shake/jitter), seated cab driving, controller mapping | code done, needs headset test |
-| M3 | HUD + in-game computer/menus on VR panels, laser pointer | |
+| M3 | HUD + in-game computer/menus on VR panels, laser pointer | menus + laser done; HUD placement pending |
 | M4 | On-foot VR: head-relative locomotion, snap/smooth turn | |
 | M5 | Hands, grab-the-wheel steering, haptics | |
 | M6 | Grab packages/items by hand, vignette, settings polish | |
