@@ -14,5 +14,12 @@ namespace EasyDeliveryVR.Patches
             if (XrRuntime.Running && __instance.gameCamera != null)
                 __instance.gameCamera.fieldOfView = VrConfig.ScreenFov.Value;
         }
+
+        // Laser pointer replaces the OS mouse on the in-game screen.
+        [HarmonyPostfix, HarmonyPatch(typeof(ScreenSystem), "GetMouse")]
+        private static void LaserMouse(ref UnityEngine.Vector2 __result)
+        {
+            if (XrRuntime.Running && Ui.VrLaser.HasHit) __result = Ui.VrLaser.MousePos;
+        }
     }
 }

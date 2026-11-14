@@ -29,8 +29,8 @@ namespace EasyDeliveryVR.Rendering
         private sCameraController _truckCam;
         private bool _cabForcedThisScene;
 
-        private Vector3 _originPos;
-        private Quaternion _originRot = Quaternion.identity;
+        private static Vector3 _originPos;
+        private static Quaternion _originRot = Quaternion.identity;
         private bool _needsRecenter = true;
 
         private void OnEnable()
@@ -54,6 +54,29 @@ namespace EasyDeliveryVR.Rendering
         }
 
         public void Recenter() => _needsRecenter = true;
+
+        /// <summary>Converts a pose in XR tracking space (e.g. a controller) to world space, matching the camera.</summary>
+        public static bool TrackingToWorld(Vector3 pos, Quaternion rot, out Vector3 worldPos, out Quaternion worldRot)
+        {
+            worldPos = default;
+            worldRot = Quaternion.identity;
+            var a = Anchor;
+            if (a == null) return false;
+            var inv = Quaternion.Inverse(_originRot);
+            var lp = inv * (pos - _originPos);
+            var lr = inv * rot;
+            if (Mode == ViewMode.Cab)
+            {
+                worldPos = a.position + a.rotation * lp;
+                worldRot = a.rotation * lr;
+            }
+            else
+            {
+                worldPos = a.TransformPoint(lp);
+                worldRot = a.rotation * lr;
+            }
+            return true;
+        }
 
         private void Update()
         {

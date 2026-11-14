@@ -43,6 +43,8 @@ namespace EasyDeliveryVR.Ui
             }
             _copies.Clear();
             _menuCam = null;
+            VrLaser.ScreenQuad = null;
+            VrLaser.Screen = null;
             _nextScan = 0;
         }
 
@@ -133,6 +135,22 @@ namespace EasyDeliveryVR.Ui
         {
             var camT = _menuCam.transform;
             float dist = VrConfig.ScreenDistance.Value;
+
+            if (VrLaser.Screen == null) VrLaser.Screen = FindFirstObjectByType<ScreenSystem>();
+            var screenRt = VrLaser.Screen != null && VrLaser.Screen.R != null ? VrLaser.Screen.R.rt : null;
+            if (VrLaser.ScreenQuad == null && screenRt != null)
+            {
+                foreach (var c in _copies.Values)
+                {
+                    var m = c.Source != null ? c.Source.sharedMaterial : null;
+                    if (c.Target != null && m != null && m.HasProperty("_MainTex") && m.GetTexture("_MainTex") == screenRt)
+                    {
+                        VrLaser.ScreenQuad = c.Target.transform;
+                        Plugin.Log.LogInfo($"VR UI: laser target is '{c.Source.name}' ({screenRt.width}x{screenRt.height})");
+                        break;
+                    }
+                }
+            }
 
             foreach (var c in _copies.Values)
             {

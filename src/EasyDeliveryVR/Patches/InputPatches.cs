@@ -45,12 +45,20 @@ namespace EasyDeliveryVR.Patches
 
             __instance.driveInput = Combine(__instance.driveInput, new Vector2(steer, throttle));
             __instance.playerInput = Combine(__instance.playerInput, MirrorMode.mirrored && !PauseSystem.paused ? new Vector2(-stick.x, stick.y) : stick);
-            __instance.radioInput = Combine(__instance.radioInput, stick);
+            // radioInput drives step-by-step menu navigation (one step per change), so it must be d-pad-like.
+            __instance.radioInput = Combine(__instance.radioInput, StickToDpad(L.Stick));
             __instance.cameraLook = Combine(__instance.cameraLook, Dz(R.Stick));
-            __instance.mouseInput = Combine(__instance.mouseInput, Dz(R.Stick)); // menu cursor
+            if (!Ui.VrLaser.HasHit)
+                __instance.mouseInput = Combine(__instance.mouseInput, Dz(R.Stick)); // stick cursor fallback
 
             __instance.selectPressed |= VrControllers.Pressed(R.Primary, pR.Primary);
             __instance.selectReleased |= VrControllers.Pressed(pR.Primary, R.Primary);
+            if (PauseSystem.paused)
+            {
+                // Right trigger clicks while a menu is open (it's the throttle otherwise).
+                __instance.selectPressed |= R.Trigger > 0.6f && pR.Trigger <= 0.6f;
+                __instance.selectReleased |= R.Trigger < 0.4f && pR.Trigger >= 0.4f;
+            }
             __instance.backPressed |= VrControllers.Pressed(R.Secondary, pR.Secondary);
             __instance.backReleased |= VrControllers.Pressed(pR.Secondary, R.Secondary);
             __instance.brakePressed |= R.Secondary;
@@ -96,6 +104,21 @@ namespace EasyDeliveryVR.Patches
             bp.b = b.b && !pb.b;
             bp.start = b.start && !pb.start;
             bp.select = b.select && !pb.select;
+        }
+
+        private static Vector2 _dpad;
+
+        /// <summary>Stick to 4-way d-pad with hysteresis: engage past 0.6, release below 0.3, dominant axis only.</summary>
+        private static Vector2 StickToDpad(Vector2 s)
+        {
+            if (_dpad != Vector2.zero)
+            {
+                if (s.magnitude < 0.3f) _dpad = Vector2.zero;
+                return _dpad;
+            }
+            if (s.magnitude > 0.6f)
+                _dpad = Mathf.Abs(s.x) > Mathf.Abs(s.y) ? new Vector2(Mathf.Sign(s.x), 0f) : new Vector2(0f, Mathf.Sign(s.y));
+            return _dpad;
         }
 
         private static Vector2 Dz(Vector2 v)

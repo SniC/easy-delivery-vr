@@ -11,6 +11,7 @@ namespace EasyDeliveryVR
         public static ConfigEntry<float> ScreenDistance;
         public static ConfigEntry<float> ScreenFov;
         public static ConfigEntry<bool> DebugSnapshots;
+        public static ConfigEntry<float> LaserPitch;
 
         public static void Bind(ConfigFile cfg)
         {
@@ -22,6 +23,8 @@ namespace EasyDeliveryVR
                 "Enable rigidbody interpolation on the truck so the cab doesn't judder at headset refresh rates.");
             ScreenDistance = cfg.Bind("UI", "ScreenDistance", 2.0f, "Distance in meters of the virtual screen showing HUD and menus.");
             ScreenFov = cfg.Bind("UI", "ScreenFov", 50f, "Vertical size in degrees of the virtual screen showing HUD and menus.");
+            LaserPitch = cfg.Bind("UI", "LaserPitch", 30f,
+                "Downward tilt in degrees applied to the laser when the runtime only reports the controller grip pose.");
             DebugSnapshots = cfg.Bind("Debug", "AutoSnapshots", true,
                 "Save a flat image of the VR view to BepInEx/vr_snapshots 8 s after each scene load (F9 any time). The headset blinks once when it happens.");
         }
