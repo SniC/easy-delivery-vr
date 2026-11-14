@@ -78,7 +78,7 @@ namespace EasyDeliveryVR.Patches
             __instance.inventoryPressed |= VrControllers.Pressed(L.Primary, pL.Primary);
             __instance.inventoryReleased |= VrControllers.Pressed(pL.Primary, L.Primary);
             __instance.inventoryHeld |= L.Primary;
-            __instance.mapPressed |= VrControllers.Pressed(L.Secondary, pL.Secondary);
+            __instance.mapPressed |= VrControllers.YTapped; // on release; holding Y opens the VR settings instead
             __instance.pausePressed |= VrControllers.MenuTapped; // on release; holding opens the VR settings instead
             // Grips grab the steering wheel when a hand is on or near it; otherwise horn (right) / radio (left).
             if (!Motion.VrHands.RightBusy)

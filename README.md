@@ -44,8 +44,9 @@ A VR mod for Easy Delivery Co (BepInEx 5 + Unity's OpenXR plugin injected at run
 | Left stick | Steer / walk / navigate menus |
 | Right trigger / left trigger | Throttle / brake + reverse |
 | A / B | Interact, select / handbrake, back |
-| X / Y | Inventory / map |
-| Left menu button: tap / hold 1 s | Pause / **VR settings panel** (cab tilt, turning, wheel, vibration, HUD, seat) |
+| X | Inventory |
+| Y: tap / hold 1 s | Map / **VR settings panel** (cab tilt, turning, wheel, vibration, HUD, seat) |
+| Left menu button: tap / hold 1 s | Pause / VR settings panel (if the runtime passes the button to the game) |
 | Grip near the steering wheel | Grab the wheel and steer with your hands (one or both) |
 | Right grip / left grip (away from wheel) | Horn / radio |
 | Left stick tap / hold 1 s | Headlights / reset truck |

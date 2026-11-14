@@ -22,10 +22,11 @@ namespace EasyDeliveryVR.Xr
         private static int _frame = -1;
 
         // Hold tracking for stick clicks (tap vs. hold)
-        private static float _leftClickTime, _rightClickTime, _menuTime;
-        private static bool _leftHoldFired, _rightHoldFired, _menuHoldFired;
+        private static float _leftClickTime, _rightClickTime, _menuTime, _yTime;
+        private static bool _leftHoldFired, _rightHoldFired, _menuHoldFired, _yHoldFired;
         public static bool LeftClickTapped, RightClickTapped, LeftClickHeld, RightClickHeld;
         public static bool MenuTapped, MenuHeld; // left menu button: tap = pause, hold = VR settings
+        public static bool YTapped, YHeld;       // left secondary (Y): tap = map, hold = VR settings
 
         public const float HoldSeconds = 1.0f;
 
@@ -42,6 +43,8 @@ namespace EasyDeliveryVR.Xr
             Track(Left.StickClick, PrevLeft.StickClick, ref _leftClickTime, ref _leftHoldFired, out LeftClickTapped, out LeftClickHeld);
             Track(Right.StickClick, PrevRight.StickClick, ref _rightClickTime, ref _rightHoldFired, out RightClickTapped, out RightClickHeld);
             Track(Left.Menu, PrevLeft.Menu, ref _menuTime, ref _menuHoldFired, out MenuTapped, out MenuHeld);
+            Track(Left.Secondary, PrevLeft.Secondary, ref _yTime, ref _yHoldFired, out YTapped, out YHeld);
+            if (Left.Menu != PrevLeft.Menu) Plugin.Log.LogInfo("VR: left menu button " + (Left.Menu ? "down" : "up"));
         }
 
         public static bool AnyValid => Left.Valid || Right.Valid;

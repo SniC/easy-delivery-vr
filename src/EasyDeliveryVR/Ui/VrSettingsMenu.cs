@@ -11,7 +11,7 @@ using UnityEngine.InputSystem;
 namespace EasyDeliveryVR.Ui
 {
     /// <summary>
-    /// In-headset VR settings panel. Hold the left menu button (or F10) to open/close.
+    /// In-headset VR settings panel. Hold Y or the left menu button for 1 s (or press F10) to open/close.
     /// Left stick up/down selects, left/right (or A) changes, B closes. Changes save to the BepInEx config at once.
     /// </summary>
     internal class VrSettingsMenu : MonoBehaviour
@@ -102,7 +102,7 @@ namespace EasyDeliveryVR.Ui
             VrControllers.Update();
 
             var kb = Keyboard.current;
-            bool toggle = VrControllers.MenuHeld || (kb != null && kb.f10Key.wasPressedThisFrame);
+            bool toggle = VrControllers.MenuHeld || VrControllers.YHeld || (kb != null && kb.f10Key.wasPressedThisFrame);
             if (toggle) { if (IsOpen) Close(); else Open(); return; }
             if (!IsOpen) return;
 
@@ -206,7 +206,7 @@ namespace EasyDeliveryVR.Ui
             if (_text == null) return;
             var sb = new StringBuilder();
             sb.Append("<b>VR SETTINGS</b>\n");
-            sb.Append("<size=40><color=#999999>left stick: choose / change   A: change   B: close</color></size>\n\n");
+            sb.Append("<size=40><color=#999999>left stick: choose / change   A: change   B or hold Y: close</color></size>\n\n");
             for (int i = 0; i < _items.Count; i++)
             {
                 var it = _items[i];
