@@ -32,6 +32,27 @@ namespace EasyDeliveryVR
             }
             foreach (var p in Resources.FindObjectsOfTypeAll<pixelPerfectView>())
                 if (p.gameObject.scene.IsValid()) sb.AppendLine($"  pixelPerfectView: {Path(p.transform)} z={p.transform.localPosition.z}");
+
+            // Renderers close to the world camera, to identify objects that look wrong in VR.
+            var cam = sCameraSystem.cam != null ? sCameraSystem.cam : Camera.main;
+            foreach (var c in Camera.allCameras)
+                if (c.stereoTargetEye == StereoTargetEyeMask.Both && c.targetTexture == null) cam = c;
+            if (cam != null)
+            {
+                sb.AppendLine($"Renderers within 6 m of '{Path(cam.transform)}' (mask 0x{cam.cullingMask:X}):");
+                foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+                {
+                    if (!r.enabled || !r.gameObject.activeInHierarchy) continue;
+                    float d = Vector3.Distance(r.bounds.ClosestPoint(cam.transform.position), cam.transform.position);
+                    if (d > 6f) continue;
+                    bool visible = (cam.cullingMask & (1 << r.gameObject.layer)) != 0;
+                    var mat = r.sharedMaterial;
+                    var tex = mat != null && mat.HasProperty("_MainTex") ? mat.mainTexture : null;
+                    if (tex == null && mat != null && mat.HasProperty("_BaseMap")) tex = mat.GetTexture("_BaseMap");
+                    sb.AppendLine($"  {d:F1}m {Path(r.transform)} layer={LayerMask.LayerToName(r.gameObject.layer)}({r.gameObject.layer}) seen={visible} " +
+                                  $"mat={(mat ? mat.name : "-")} shader={(mat ? mat.shader.name : "-")} tex={(tex ? tex.name : "-")} size={r.bounds.size}");
+                }
+            }
             Plugin.Log.LogInfo(sb.ToString());
         }
 

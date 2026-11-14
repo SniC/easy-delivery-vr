@@ -92,9 +92,25 @@ namespace EasyDeliveryVR.Rendering
                 _cam.targetTexture = null;
             }
             _cam.stereoTargetEye = StereoTargetEyeMask.Both;
+            Plugin.Log.LogInfo($"VR: game near clip {_cam.nearClipPlane}, using 0.03");
             _cam.nearClipPlane = Mathf.Min(_cam.nearClipPlane, 0.03f);
+            HideNearClipBlockers();
             Plugin.Log.LogInfo($"VR: using camera '{_cam.name}' in scene '{_cam.gameObject.scene.name}'");
             _needsRecenter = true;
+        }
+
+        /// <summary>
+        /// The game parks black inside-out boxes ("CameraBlocked") around its camera that are normally
+        /// hidden by the large near-clip plane. With the VR near clip of 3 cm they'd fill the view.
+        /// </summary>
+        private void HideNearClipBlockers()
+        {
+            foreach (var r in FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (r.gameObject.name != "CameraBlocked" || !r.enabled) continue;
+                r.enabled = false;
+                Plugin.Log.LogInfo("VR: hid near-clip blocker " + r.transform.root.name + "/.../" + r.name);
+            }
         }
 
         private void FindTruckCamera()
