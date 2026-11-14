@@ -14,7 +14,7 @@ namespace EasyDeliveryVR.Patches
     ///   A ................. interact / select   B .............. handbrake / back
     ///   X ................. inventory           Y .............. map
     ///   Left menu ......... pause
-    ///   Right grip ........ horn                Left grip ...... radio
+    ///   Right grip ........ horn                Left grip + left stick flick ... radio (d-pad)
     ///   Left stick tap .... headlights          Left stick hold  reset truck
     ///   Right stick tap ... change camera       Right stick hold recenter view
     ///   Right stick ....... camera look (3rd person / on foot)
@@ -50,13 +50,29 @@ namespace EasyDeliveryVR.Patches
             float throttle = R.Trigger - L.Trigger;
             if (Mathf.Abs(throttle) < 0.05f) throttle = 0f;
 
+            // Radio: hold the left grip (away from the wheel) and flick the left stick, like the game's d-pad:
+            // left/right = tune to the previous/next station, down = radio on/off, up = start/stop scanning.
+            // While the grip is held the stick doesn't steer.
+            bool radioMode = !PauseSystem.paused && L.GripButton && !Motion.VrHands.LeftBusy && !Motion.VrGrab.Active;
+            var dpad = StickToDpad(L.Stick);
+            if (radioMode)
+            {
+                stick = Vector2.zero;
+                if (dpad != Vector2.zero && _prevRadioDpad == Vector2.zero)
+                {
+                    __instance.radioPressed = true;
+                    __instance.radioInput = MirrorMode.mirrored ? new Vector2(-dpad.x, dpad.y) : dpad;
+                }
+            }
+            _prevRadioDpad = radioMode ? dpad : Vector2.zero;
+
             float steer = stick.x;
             if (MirrorMode.mirrored) { steer = -steer; }
 
             __instance.driveInput = Combine(__instance.driveInput, new Vector2(steer, throttle));
             __instance.playerInput = Combine(__instance.playerInput, MirrorMode.mirrored && !PauseSystem.paused ? new Vector2(-stick.x, stick.y) : stick);
             // radioInput drives step-by-step menu navigation (one step per change), so it must be d-pad-like.
-            __instance.radioInput = Combine(__instance.radioInput, StickToDpad(L.Stick));
+            if (!radioMode) __instance.radioInput = Combine(__instance.radioInput, dpad);
             __instance.cameraLook = Combine(__instance.cameraLook, Dz(R.Stick));
             // On foot the mod turns the body itself (snap/smooth); the game's per-frame stick turn would double it.
             if (Rendering.VrCameraManager.Mode == Rendering.VrCameraManager.ViewMode.OnFoot)
@@ -87,8 +103,6 @@ namespace EasyDeliveryVR.Patches
             // On foot in first person the grips grab things instead (see VrGrab).
             if (!Motion.VrHands.RightBusy && !Motion.VrGrab.Active)
                 __instance.hornPressed |= VrControllers.Pressed(R.GripButton, pR.GripButton);
-            if (!Motion.VrHands.LeftBusy && !Motion.VrGrab.Active)
-                __instance.radioPressed |= VrControllers.Pressed(L.GripButton, pL.GripButton);
             __instance.headlightsPressed |= VrControllers.LeftClickTapped;
             __instance.resetHeld |= VrControllers.LeftClickHeld;
             if (!Rendering.VrCameraManager.ConsumeCameraButton)
@@ -147,6 +161,7 @@ namespace EasyDeliveryVR.Patches
         }
 
         private static Vector2 _dpad;
+        private static Vector2 _prevRadioDpad;
 
         /// <summary>Stick to 4-way d-pad with hysteresis: engage past 0.6, release below 0.3, dominant axis only.</summary>
         private static Vector2 StickToDpad(Vector2 s)
