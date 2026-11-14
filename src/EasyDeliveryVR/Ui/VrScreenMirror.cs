@@ -44,6 +44,43 @@ namespace EasyDeliveryVR.Ui
 
         private void OnSceneLoaded(Scene s, LoadSceneMode m) => Clear();
 
+        private static VrScreenMirror _instance;
+        private void Awake() => _instance = this;
+
+        /// <summary>
+        /// Where a world point appears on the virtual screen copy showing <paramref name="rt"/>, in that
+        /// texture's pixels (x right, y down): the line from the head to the point, crossed with the panel.
+        /// Used for the game's HUD markers (drop-off, pick-up, labels), which assume the flat 456x256 view.
+        /// </summary>
+        public static bool WorldToRtPixel(Texture rt, Vector3 world, out Vector2 px)
+        {
+            px = new Vector2(-100f, -100f);
+            var head = Camera.main;
+            if (_instance == null || rt == null) return false;
+            foreach (var c in Camera.allCameras)
+                if (c.stereoTargetEye == StereoTargetEyeMask.Both && c.targetTexture == null) { head = c; break; }
+            if (head == null) return false;
+
+            Transform quad = null;
+            foreach (var c in _instance._copies.Values)
+            {
+                if (c.Target == null || !c.Target.enabled || c.Source == null) continue;
+                var m = c.Source.sharedMaterial;
+                if (m != null && m.HasProperty("_MainTex") && m.GetTexture("_MainTex") == rt) { quad = c.Target.transform; break; }
+            }
+            if (quad == null) return false;
+
+            var eye = head.transform.position;
+            var dir = world - eye;
+            if (Vector3.Dot(dir, head.transform.forward) <= 0f) return false; // behind the viewer
+            var plane = new Plane(quad.forward, quad.position);
+            var ray = new Ray(eye, dir);
+            if (!plane.Raycast(ray, out float enter)) return false;
+            var local = quad.InverseTransformPoint(ray.GetPoint(enter)); // quad spans -0.5..0.5
+            px = new Vector2((local.x + 0.5f) * rt.width, (0.5f - local.y) * rt.height);
+            return true;
+        }
+
         private void Clear()
         {
             foreach (var c in _copies.Values)

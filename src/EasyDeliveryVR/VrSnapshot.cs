@@ -76,6 +76,14 @@ namespace EasyDeliveryVR
                 if (cmd == "snapshot") Take("cmd");
                 else if (cmd == "settings") Ui.VrSettingsMenu.Toggle();
                 else if (cmd == "shaders") DumpShaders();
+                else if (cmd == "nav")
+                {
+                    var jb = FindFirstObjectByType<jobBoard>();
+                    var nav = jb != null ? jb.navigation : FindFirstObjectByType<sPathFinder>();
+                    Plugin.Log.LogInfo($"VR nav: jobBoard={(jb ? $"progress={jb.progress} payload={(jb.currentPayload ? jb.currentPayload.name : "-")}" : "-")} " +
+                                       $"dest={(nav && nav.dest ? $"{nav.dest.name} at {nav.dest.transform.position} destination={nav.dest.destination}" : "-")} " +
+                                       $"car={(nav && nav.car ? nav.car.transform.position.ToString() : "-")}");
+                }
             }
         }
 
