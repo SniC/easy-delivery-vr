@@ -214,7 +214,7 @@ namespace EasyDeliveryVR.Ui
         private void Sync()
         {
             var camT = _menuCam.transform;
-            float dist = VrConfig.ScreenDistance.Value;
+            float dist = ScreenDepth();
 
             if (VrLaser.Screen == null) VrLaser.Screen = FindFirstObjectByType<ScreenSystem>();
             var screenRt = VrLaser.Screen != null && VrLaser.Screen.R != null ? VrLaser.Screen.R.rt : null;
@@ -276,6 +276,24 @@ namespace EasyDeliveryVR.Ui
                     if (c.Target is SpriteRenderer) c.Target.enabled = false;
                 PlaceOnHand();
             }
+        }
+
+        private sHUD _hud;
+        private float _depth = -1f;
+
+        /// <summary>
+        /// Distance of the virtual screen. During a conversation in first person you stand 1.5 m from the person talking;
+        /// a screen at 2 m would then look like its text is behind them (stereo depth), so it comes closer.
+        /// Angular size stays the same at any distance.
+        /// </summary>
+        private float ScreenDepth()
+        {
+            if (_hud == null && Time.frameCount % 30 == 0) _hud = FindFirstObjectByType<sHUD>();
+            float target = VrConfig.ScreenDistance.Value;
+            bool firstPerson = VrCameraManager.Mode == VrCameraManager.ViewMode.Cab || VrCameraManager.Mode == VrCameraManager.ViewMode.OnFoot;
+            if (firstPerson && _hud != null && _hud.dialog != null && _hud.dialog.dialogStarted) target = Mathf.Min(target, 0.9f);
+            _depth = _depth < 0f ? target : Mathf.MoveTowards(_depth, target, Time.unscaledDeltaTime * 3f);
+            return _depth;
         }
 
         private const float HandScreenWidth = 0.3f;
