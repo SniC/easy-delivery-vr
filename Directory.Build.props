@@ -1,0 +1,11 @@
+<Project>
+  <!-- Override GameDir in a git-ignored Directory.Build.local.props if your install lives elsewhere. -->
+  <Import Project="Directory.Build.local.props" Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.local.props')" />
+
+  <PropertyGroup>
+    <GameDir Condition="'$(GameDir)' == ''">D:\SteamLibrary\steamapps\common\Easy Delivery Co</GameDir>
+    <GameManaged>$(GameDir)\EasyDeliveryCo_Data\Managed</GameManaged>
+    <BepInExCore>$(GameDir)\BepInEx\core</BepInExCore>
+    <PluginInstallDir>$(GameDir)\BepInEx\plugins\EasyDeliveryVR</PluginInstallDir>
+  </PropertyGroup>
+</Project>
