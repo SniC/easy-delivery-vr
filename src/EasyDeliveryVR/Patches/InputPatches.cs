@@ -79,7 +79,10 @@ namespace EasyDeliveryVR.Patches
             __instance.inventoryReleased |= VrControllers.Pressed(pL.Primary, L.Primary);
             __instance.inventoryHeld |= L.Primary;
             __instance.mapPressed |= VrControllers.YTapped; // on release; holding Y opens the VR settings instead
-            __instance.pausePressed |= VrControllers.MenuTapped; // on release; holding opens the VR settings instead
+            // Pause: ☰ tap (if the runtime passes it on; Steam Link keeps it), or both stick clicks together.
+            // In the game's free camera (cam.exe) pausing is the only way out, so B also pauses there.
+            __instance.pausePressed |= VrControllers.MenuTapped || VrControllers.BothClicks
+                                       || (__instance.freeCamMode && VrControllers.Pressed(R.Secondary, pR.Secondary));
             // Grips grab the steering wheel when a hand is on or near it; otherwise horn (right) / radio (left).
             // On foot in first person the grips grab things instead (see VrGrab).
             if (!Motion.VrHands.RightBusy && !Motion.VrGrab.Active)
