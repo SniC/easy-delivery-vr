@@ -117,6 +117,12 @@ namespace EasyDeliveryVR
                         SceneManager.LoadScene(scene);
                     }
                 }
+                else if (cmd == "controls")
+                {
+                    foreach (var cd in Resources.FindObjectsOfTypeAll<sControlsDisplay>())
+                        for (int i = 0; i < cd.mappings.Length; i++)
+                            Plugin.Log.LogInfo($"VR controls '{cd.name}' #{i}: label='{cd.mappings[i].label}' keyboard='{cd.mappings[i].keyboard}'");
+                }
                 else if (cmd == "hands")
                 {
                     foreach (var ii in FindObjectsByType<InteriorInteraction>(FindObjectsInactive.Include, FindObjectsSortMode.None))
