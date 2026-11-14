@@ -57,6 +57,9 @@ namespace EasyDeliveryVR.Patches
             // radioInput drives step-by-step menu navigation (one step per change), so it must be d-pad-like.
             __instance.radioInput = Combine(__instance.radioInput, StickToDpad(L.Stick));
             __instance.cameraLook = Combine(__instance.cameraLook, Dz(R.Stick));
+            // On foot the mod turns the body itself (snap/smooth); the game's per-frame stick turn would double it.
+            if (Rendering.VrCameraManager.Mode == Rendering.VrCameraManager.ViewMode.OnFoot)
+                __instance.cameraLook = Vector2.zero;
             if (!Ui.VrLaser.HasHit)
                 __instance.mouseInput = Combine(__instance.mouseInput, Dz(R.Stick)); // stick cursor fallback
 

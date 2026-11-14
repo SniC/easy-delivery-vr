@@ -18,7 +18,7 @@ namespace EasyDeliveryVR.Rendering
     /// </summary>
     internal class VrCameraManager : MonoBehaviour
     {
-        public enum ViewMode { None, Default, Cab }
+        public enum ViewMode { None, Default, Cab, OnFoot }
 
         public static ViewMode Mode { get; private set; }
 
@@ -50,6 +50,8 @@ namespace EasyDeliveryVR.Rendering
             _cam = null;
             _truckCam = null;
             _cabForcedThisScene = false;
+            _footCam = null;
+            _footForcedThisScene = false;
             _needsRecenter = true;
         }
 
@@ -65,10 +67,10 @@ namespace EasyDeliveryVR.Rendering
             var inv = Quaternion.Inverse(_originRot);
             var lp = inv * (pos - _originPos);
             var lr = inv * rot;
-            if (Mode == ViewMode.Cab)
+            if (Mode == ViewMode.Cab || Mode == ViewMode.OnFoot)
             {
-                worldPos = a.position + a.rotation * lp;
-                worldRot = a.rotation * lr;
+                worldPos = a.position + AnchorRotation * lp;
+                worldRot = AnchorRotation * lr;
             }
             else
             {
@@ -88,6 +90,7 @@ namespace EasyDeliveryVR.Rendering
             else if (_cam.targetTexture != null) _cam.targetTexture = null; // game may re-assign it
 
             if (_truckCam == null) FindTruckCamera();
+            UpdateOnFoot();
         }
 
         private void FindAndSetupCamera()
@@ -166,10 +169,18 @@ namespace EasyDeliveryVR.Rendering
         {
             var tc = _truckCam;
             var sys = sCameraSystem.instance;
-            return tc != null && sys != null
-                   && tc.firstPerson && !tc.fixedPerspective
-                   && tc.car != null && !tc.car.GuyActive
-                   && sys.currentTarget == tc.camPivot.transform;
+            if (tc == null || sys == null || tc.car == null || tc.car.GuyActive) return false;
+            // Truck camera in first person, or the on-foot first-person controller looking from the cab pivot (its mode 2).
+            return (tc.firstPerson && !tc.fixedPerspective && sys.currentTarget == tc.camPivot.transform)
+                   || sys.currentTarget == tc.firstPersonPivot;
+        }
+
+        private bool OnFoot()
+        {
+            var fp = _footCam;
+            var sys = sCameraSystem.instance;
+            return fp != null && sys != null && fp.working && _truckCam != null && _truckCam.car != null
+                   && _truckCam.car.GuyActive && sys.currentTarget == fp.transform;
         }
 
         private void OnBeforeRender()
@@ -177,7 +188,7 @@ namespace EasyDeliveryVR.Rendering
             if (_cam == null || !XrRuntime.Running) return;
             if (!VrInput.TryGetHeadPose(out var pos, out var rot)) return;
 
-            var mode = InCab() ? ViewMode.Cab : ViewMode.Default;
+            var mode = InCab() ? ViewMode.Cab : OnFoot() ? ViewMode.OnFoot : ViewMode.Default;
             if (mode != Mode)
             {
                 Plugin.Log.LogInfo($"VR: view mode {Mode} -> {mode}");
@@ -199,18 +210,87 @@ namespace EasyDeliveryVR.Rendering
             var headPos = inv * (pos - _originPos);
             var headRot = inv * rot;
 
-            Anchor = mode == ViewMode.Cab ? _truckCam.firstPersonPivot : _cam.transform.parent;
-
-            if (mode == ViewMode.Cab)
+            switch (mode)
             {
-                var pivot = _truckCam.firstPersonPivot;
-                _cam.transform.SetPositionAndRotation(pivot.position + pivot.rotation * headPos, pivot.rotation * headRot);
+                case ViewMode.Cab:
+                    Anchor = _truckCam.firstPersonPivot;
+                    AnchorRotation = Anchor.rotation; // rigid with the truck, including its tilt
+                    break;
+                case ViewMode.OnFoot:
+                    Anchor = _footCam.transform;
+                    AnchorRotation = Quaternion.Euler(0f, Anchor.eulerAngles.y, 0f); // body yaw only
+                    break;
+                default:
+                    Anchor = _cam.transform.parent;
+                    break;
             }
-            else
+
+            if (mode == ViewMode.Default)
             {
                 _cam.transform.localPosition = headPos;
                 _cam.transform.localRotation = headRot;
             }
+            else
+            {
+                _cam.transform.SetPositionAndRotation(Anchor.position + AnchorRotation * headPos, AnchorRotation * headRot);
+            }
+        }
+
+        // ---- On foot ----
+
+        private sFirstPersonController _footCam;
+        private bool _footForcedThisScene;
+        private bool _turnLatched;
+
+        /// <summary>World rotation the tracked head is relative to (cab: truck pivot; on foot: body yaw).</summary>
+        public static Quaternion AnchorRotation { get; private set; } = Quaternion.identity;
+
+        private void UpdateOnFoot()
+        {
+            if (_footCam == null)
+            {
+                _footCam = FindFirstObjectByType<sFirstPersonController>();
+                if (_footCam == null) return;
+            }
+
+            // Its Start coroutine restores the saved camera mode two frames in; switch to first person after that.
+            if (VrConfig.FirstPersonOnFoot.Value && !_footForcedThisScene && Time.timeSinceLevelLoad > 1f)
+            {
+                _footForcedThisScene = true;
+                _footCam.cameraMode = 2; // 2 = first person on foot, cab pivot in the truck
+                InterSceneData.SetInt("cameraMode", 2);
+                Plugin.Log.LogInfo($"VR: on-foot first person enabled (body '{_footCam.transform.parent?.name}')");
+            }
+
+            if (Mode != ViewMode.OnFoot) return;
+            var body = _footCam.cc != null ? _footCam.cc.transform : _footCam.transform.parent;
+            if (body == null) return;
+
+            // Turning: snap (default) or smooth, around the player's head so the view doesn't shift sideways.
+            float x = VrControllers.Right.Stick.x;
+            float angle = 0f;
+            if (VrConfig.SmoothTurn.Value)
+            {
+                if (Mathf.Abs(x) > 0.2f) angle = x * VrConfig.SmoothTurnSpeed.Value * Time.deltaTime;
+            }
+            else if (!_turnLatched && Mathf.Abs(x) > 0.6f)
+            {
+                _turnLatched = true;
+                angle = Mathf.Sign(x) * VrConfig.SnapTurnAngle.Value;
+            }
+            if (Mathf.Abs(x) < 0.3f) _turnLatched = false;
+            if (angle != 0f) body.RotateAround(_cam.transform.position, Vector3.up, angle);
+        }
+
+        /// <summary>Flat forward direction of the player's head in world space (for head-relative walking).</summary>
+        public static Vector3 HeadForwardFlat { get; private set; } = Vector3.forward;
+
+        private void LateUpdate()
+        {
+            if (_cam == null) return;
+            var f = _cam.transform.forward;
+            f.y = 0f;
+            if (f.sqrMagnitude > 1e-4f) HeadForwardFlat = f.normalized;
         }
     }
 }

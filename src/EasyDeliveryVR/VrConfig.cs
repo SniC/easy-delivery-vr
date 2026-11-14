@@ -13,6 +13,10 @@ namespace EasyDeliveryVR
         public static ConfigEntry<bool> DebugSnapshots;
         public static ConfigEntry<float> LaserPitch;
         public static ConfigEntry<bool> DebugInput;
+        public static ConfigEntry<bool> FirstPersonOnFoot;
+        public static ConfigEntry<bool> SmoothTurn;
+        public static ConfigEntry<float> SnapTurnAngle;
+        public static ConfigEntry<float> SmoothTurnSpeed;
 
         public static void Bind(ConfigFile cfg)
         {
@@ -22,6 +26,13 @@ namespace EasyDeliveryVR
             DisableCameraShake = cfg.Bind("Comfort", "DisableCameraShake", true, "Disable the acceleration-based camera shake.");
             SmoothTruckPhysics = cfg.Bind("Comfort", "SmoothTruckPhysics", true,
                 "Enable rigidbody interpolation on the truck so the cab doesn't judder at headset refresh rates.");
+            FirstPersonOnFoot = cfg.Bind("OnFoot", "FirstPerson", false,
+                "Start on foot in first person (the game's camera mode 2) instead of the over-the-head view. " +
+                "Either way, the change-camera button (right stick tap) cycles the game's camera modes; " +
+                "head-relative walking and snap/smooth turning apply whenever you're in first person on foot.");
+            SmoothTurn = cfg.Bind("OnFoot", "SmoothTurn", false, "Turn smoothly with the right stick instead of in snap steps.");
+            SnapTurnAngle = cfg.Bind("OnFoot", "SnapTurnAngle", 30f, "Degrees per snap turn.");
+            SmoothTurnSpeed = cfg.Bind("OnFoot", "SmoothTurnSpeed", 120f, "Degrees per second for smooth turning.");
             ScreenDistance = cfg.Bind("UI", "ScreenDistance", 2.0f, "Distance in meters of the virtual screen showing HUD and menus.");
             ScreenFov = cfg.Bind("UI", "ScreenFov", 50f, "Vertical size in degrees of the virtual screen showing HUD and menus.");
             LaserPitch = cfg.Bind("UI", "LaserPitch", 30f,
