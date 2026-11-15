@@ -3,6 +3,12 @@
 Player-facing notes per release. `tools/New-Release.ps1` puts the section of the version being released into the
 GitHub release notes, so add a section here before releasing.
 
+## v0.2.2
+
+- Faster: the headset view is no longer rendered twice per eye (the game's menu camera also drew into the headset).
+- Smoother: removed work the mod did every frame, including a scan that could cause a small hitch every few seconds.
+- New "Render resolution" setting (50–100%) in the VR settings for extra performance; the pixel-art look hides it well.
+
 ## v0.2.1
 
 - Gentler controller rumble: it now only reacts to bumps, landings and crashes, not to accelerating, braking or
