@@ -364,7 +364,7 @@ namespace EasyDeliveryVR.Rendering
         private bool _guyFirstPersonSet;
         private Renderer[] _hiddenHead;
 
-        /// <summary>True while the right-stick tap is used by the mod (on foot), so it must not reach the game's camera toggle.</summary>
+        /// <summary>True while the camera button (right-stick tap; left on Steam Frame) is used by the mod (on foot), so it must not reach the game's camera toggle.</summary>
         public static bool ConsumeCameraButton { get; private set; }
 
         private void UpdateOnFoot()
@@ -396,7 +396,7 @@ namespace EasyDeliveryVR.Rendering
             }
             else if (_guy != null)
             {
-                if (GuyActive && VrControllers.RightClickTapped)
+                if (GuyActive && VrControllers.CameraTapped)
                 {
                     _vrFootFirstPerson = !_vrFootFirstPerson;
                     Plugin.Log.LogInfo("VR: on-foot view " + (_vrFootFirstPerson ? "first person" : "over the head"));

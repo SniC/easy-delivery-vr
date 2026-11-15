@@ -10,6 +10,7 @@ A free, unofficial PC VR mod for Easy Delivery Co. Runs through SteamVR (OpenXR)
 - Grab packages, doors and items by reaching for them
 - Menus on your left hand, laser pointer on your right
 - Comfort options and an in-game VR settings panel (hold Y)
+- Steam Frame controllers use the game's own gamepad layout (d-pad, four face buttons, bumpers)
 
 ## Install
 
@@ -39,6 +40,23 @@ To play flat again, set `EnableVR = false` in `BepInEx\config\easydeliveryvr.cfg
 | Left stick click / hold 1 s | Headlights / reset truck |
 | Right stick click / hold 1 s | Change camera / recenter view |
 | Right stick | Camera look (chase / over-the-head cam); snap turn when on foot in first person |
+
+### Steam Frame controllers
+
+The Steam Frame controllers follow the game's gamepad layout instead:
+
+| Input | Action |
+|---|---|
+| Left stick, triggers | Steer / walk / navigate menus, throttle / brake + reverse |
+| A / B | Interact, select / handbrake, back (follows the game's swap A/B option) |
+| X / Y | Headlights / reset truck |
+| D-pad | Radio (left/right = station, down = on/off, up = scan), menus |
+| LB / RB | Items / horn |
+| View: tap / hold 1 s | Map / **VR settings panel** |
+| Menu | Pause |
+| Left stick click | Change camera |
+| Right stick hold 1 s | Recenter view |
+| Grips | Grab the wheel, packages, doors and items |
 
 Keyboard: **F8** = recenter, **F10** = VR settings panel, **F9** = save a VR view snapshot to `BepInEx/vr_snapshots`,
 **F7** = dump camera setup to the BepInEx log. For development, writing `settings` or `snapshot` to `BepInEx/vr_cmd.txt`

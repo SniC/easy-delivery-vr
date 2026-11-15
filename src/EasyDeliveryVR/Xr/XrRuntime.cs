@@ -22,13 +22,15 @@ namespace EasyDeliveryVR.Xr
         private const string OpenXrAsm = "Unity.XR.OpenXR";
         private const string MgmtAsm = "Unity.XR.Management";
 
-        private static readonly string[] InteractionProfiles =
+        private static readonly (string Asm, string Type)[] InteractionProfiles =
         {
-            "UnityEngine.XR.OpenXR.Features.Interactions.OculusTouchControllerProfile",
-            "UnityEngine.XR.OpenXR.Features.Interactions.MetaQuestTouchPlusControllerProfile",
-            "UnityEngine.XR.OpenXR.Features.Interactions.ValveIndexControllerProfile",
-            "UnityEngine.XR.OpenXR.Features.Interactions.HTCViveControllerProfile",
-            "UnityEngine.XR.OpenXR.Features.Interactions.KHRSimpleControllerProfile",
+            (OpenXrAsm, "UnityEngine.XR.OpenXR.Features.Interactions.OculusTouchControllerProfile"),
+            (OpenXrAsm, "UnityEngine.XR.OpenXR.Features.Interactions.MetaQuestTouchPlusControllerProfile"),
+            (OpenXrAsm, "UnityEngine.XR.OpenXR.Features.Interactions.ValveIndexControllerProfile"),
+            (OpenXrAsm, "UnityEngine.XR.OpenXR.Features.Interactions.HTCViveControllerProfile"),
+            (OpenXrAsm, "UnityEngine.XR.OpenXR.Features.Interactions.KHRSimpleControllerProfile"),
+            // The mod's own (XR\EasyDeliveryVR.SteamFrame.dll); only active when the runtime has the Frame extension.
+            ("EasyDeliveryVR.SteamFrame", "EasyDeliveryVR.SteamFrame.SteamFrameControllerProfile"),
         };
 
         public static string XrDir =>
@@ -152,9 +154,9 @@ namespace EasyDeliveryVR.Xr
             UnityEngine.Object.DontDestroyOnLoad(settings);
 
             var list = new System.Collections.Generic.List<object>();
-            foreach (var name in InteractionProfiles)
+            foreach (var (asm, name) in InteractionProfiles)
             {
-                var t = FindType(OpenXrAsm, name, required: false);
+                var t = FindType(asm, name, required: false);
                 if (t == null) { Plugin.Log.LogInfo("XR: profile not available: " + name); continue; }
                 var f = ScriptableObject.CreateInstance(t);
                 UnityEngine.Object.DontDestroyOnLoad(f);

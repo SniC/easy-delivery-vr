@@ -28,11 +28,36 @@ namespace EasyDeliveryVR.Patches
             { "scan", "GRIP+UP" },
         };
 
+        // Steam Frame controllers: the game's gamepad layout (see InputPatches.MergeFrameButtons).
+        private static readonly Dictionary<string, string> Frame = new Dictionary<string, string>
+        {
+            { "interact/ok", "A" },       // A/B follow the game's swap option, see FrameKey
+            { "brake/back", "B" },
+            { "map/items", "VIEW/LB" },
+            { "pause", "MENU" },
+            { "job selection", "VIEW" },
+            { "drive", "STICK+TRIG" },
+            { "camera", "L CLICK" },
+            { "reset (hold)", "Y" },
+            { "lights", "X" },
+            { "radio on", "D-DOWN" },
+            { "channels", "D-L/R" },
+            { "scan", "D-UP" },
+        };
+
+        private static bool TryGetKey(string label, out string key)
+        {
+            if (!VrControllers.IsFrame) return Touch.TryGetValue(label, out key);
+            if (!Frame.TryGetValue(label, out key)) return false;
+            if (!InputPatches.FrameSouthIsOk() && (key == "A" || key == "B")) key = key == "A" ? "B" : "A";
+            return true;
+        }
+
         [HarmonyPrefix, HarmonyPatch("DrawControl", typeof(MiniRenderer), typeof(int), typeof(string), typeof(float), typeof(float))]
         private static bool DrawTouchControl(sControlsDisplay __instance, MiniRenderer R, int index, string label, float x, float y)
         {
             if (!XrRuntime.Running || __instance.mappings == null || index < 0 || index >= __instance.mappings.Length) return true;
-            if (!Touch.TryGetValue(__instance.mappings[index].label ?? "", out var key)) return true; // unknown entry: game's own
+            if (!TryGetKey(__instance.mappings[index].label ?? "", out var key)) return true; // unknown entry: game's own
 
             if (label.Length > 0)
             {

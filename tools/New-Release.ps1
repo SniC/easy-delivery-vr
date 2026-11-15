@@ -9,7 +9,7 @@
     2. Builds Release.
     3. Packages EasyDeliveryVR-vX.Y.Z.zip laid out like the game folder:
          BepInEx\plugins\EasyDeliveryVR\EasyDeliveryVR.dll
-         BepInEx\plugins\EasyDeliveryVR\XR\Unity.XR.*.dll
+         BepInEx\plugins\EasyDeliveryVR\XR\Unity.XR.*.dll, EasyDeliveryVR.SteamFrame.dll
          EasyDeliveryCo_Data\Plugins\x86_64\UnityOpenXR.dll, openxr_loader.dll
          EasyDeliveryCo_Data\UnitySubsystems\UnityOpenXR\UnitySubsystemsManifest.json
          INSTALL.txt, THIRD-PARTY-NOTICES.txt
@@ -87,7 +87,7 @@ try {
     $nativeDir = Join-Path $stage "EasyDeliveryCo_Data\Plugins\x86_64"
     New-Item -ItemType Directory -Force (Join-Path $pluginDir "XR"), $nativeDir | Out-Null
     Copy-Item $dll $pluginDir
-    Copy-Item (Join-Path $xrManaged "Unity.XR.*.dll") (Join-Path $pluginDir "XR")
+    Copy-Item (Join-Path $xrManaged "*.dll") (Join-Path $pluginDir "XR")
     Copy-Item (Join-Path $data "Plugins\x86_64\UnityOpenXR.dll"), (Join-Path $data "Plugins\x86_64\openxr_loader.dll") $nativeDir
     Copy-Item (Join-Path $data "UnitySubsystems") (Join-Path $stage "EasyDeliveryCo_Data") -Recurse
 

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Steam Frame controller interaction profile. A separate assembly because it derives from Unity's OpenXR
+       types; it ships in the mod's XR folder next to Unity.XR.OpenXR.dll and is loaded by XrRuntime. -->
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>EasyDeliveryVR.SteamFrame</AssemblyName>
+    <RootNamespace>EasyDeliveryVR.SteamFrame</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <PluginXrDir>$(PluginInstallDir)\XR</PluginXrDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Unity OpenXR from the mod's XR folder (put there by tools/Install-XrRuntime.ps1), Unity from the game -->
+  <ItemGroup>
+    <Reference Include="Unity.XR.OpenXR" HintPath="$(PluginXrDir)\Unity.XR.OpenXR.dll" Private="false" />
+    <Reference Include="UnityEngine" HintPath="$(GameManaged)\UnityEngine.dll" Private="false" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(GameManaged)\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="UnityEngine.XRModule" HintPath="$(GameManaged)\UnityEngine.XRModule.dll" Private="false" />
+    <Reference Include="UnityEngine.SubsystemsModule" HintPath="$(GameManaged)\UnityEngine.SubsystemsModule.dll" Private="false" />
+    <Reference Include="Unity.InputSystem" HintPath="$(GameManaged)\Unity.InputSystem.dll" Private="false" />
+  </ItemGroup>
+
+  <Target Name="InstallPlugin" AfterTargets="Build" Condition="Exists('$(PluginXrDir)')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginXrDir)" SkipUnchangedFiles="true" ContinueOnError="true" />
+    <Message Importance="high" Text="Installed $(TargetFileName) to $(PluginXrDir)" />
+  </Target>
+
+</Project>

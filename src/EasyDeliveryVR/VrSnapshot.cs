@@ -130,6 +130,16 @@ namespace EasyDeliveryVR
                         for (int i = 0; i < cd.mappings.Length; i++)
                             Plugin.Log.LogInfo($"VR controls '{cd.name}' #{i}: label='{cd.mappings[i].label}' keyboard='{cd.mappings[i].keyboard}'");
                 }
+                else if (cmd == "bindings")
+                {
+                    foreach (var pi in Resources.FindObjectsOfTypeAll<UnityEngine.InputSystem.PlayerInput>())
+                    {
+                        if (pi.actions == null) continue;
+                        foreach (var a in pi.actions)
+                            foreach (var b in a.bindings)
+                                Plugin.Log.LogInfo($"VR binding '{pi.name}' {a.actionMap?.name}/{a.name} ({a.type}): {b.effectivePath} {b.name} {b.interactions} {b.processors} groups={b.groups}");
+                    }
+                }
                 else if (cmd == "hands")
                 {
                     foreach (var ii in FindObjectsByType<InteriorInteraction>(FindObjectsInactive.Include, FindObjectsSortMode.None))

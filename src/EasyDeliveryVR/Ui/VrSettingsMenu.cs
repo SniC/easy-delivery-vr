@@ -152,6 +152,8 @@ namespace EasyDeliveryVR.Ui
             var L = VrControllers.Left;
             var R = VrControllers.Right;
             var dir = Dpad(L.Stick);
+            if (dir == Vector2.zero && VrControllers.IsFrame && VrControllers.FrameDpad(VrControllers.PrevLeft) == Vector2.zero)
+                dir = VrControllers.FrameDpad(L); // Steam Frame d-pad: one step per press
             if (dir.y > 0) _selected = (_selected + _items.Count - 1) % _items.Count;
             if (dir.y < 0) _selected = (_selected + 1) % _items.Count;
             if (dir.x != 0) _items[_selected].Change((int)dir.x);

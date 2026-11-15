@@ -18,6 +18,9 @@ namespace EasyDeliveryVR.Patches
     ///   Left stick tap .... headlights          Left stick hold  reset truck
     ///   Right stick tap ... change camera       Right stick hold recenter view
     ///   Right stick ....... camera look (3rd person / on foot)
+    ///
+    /// Steam Frame controllers (own profile, see VrControllers.IsFrame) follow the game's gamepad layout
+    /// instead: see MergeFrameButtons.
     /// </summary>
     [HarmonyPatch(typeof(sInputManager))]
     internal static class InputPatches
@@ -40,11 +43,10 @@ namespace EasyDeliveryVR.Patches
 
         private static void Merge(sInputManager __instance)
         {
-
             var L = VrControllers.Left;
             var R = VrControllers.Right;
-            var pL = VrControllers.PrevLeft;
             var pR = VrControllers.PrevRight;
+            bool frame = VrControllers.IsFrame;
 
             var stick = Dz(L.Stick);
             float throttle = R.Trigger - L.Trigger;
@@ -52,19 +54,17 @@ namespace EasyDeliveryVR.Patches
 
             // Radio: hold the left grip (away from the wheel) and flick the left stick, like the game's d-pad:
             // left/right = tune to the previous/next station, down = radio on/off, up = start/stop scanning.
-            // While the grip is held the stick doesn't steer.
-            bool radioMode = !PauseSystem.paused && L.GripButton && !Motion.VrHands.LeftBusy && !Motion.VrGrab.Active;
-            var dpad = StickToDpad(L.Stick);
-            if (radioMode)
+            // While the grip is held the stick doesn't steer. The Steam Frame has a real d-pad for this.
+            bool radioMode = !frame && !PauseSystem.paused && L.GripButton && !Motion.VrHands.LeftBusy && !Motion.VrGrab.Active;
+            var stickDpad = StickToDpad(L.Stick);
+            var radioDpad = frame ? VrControllers.FrameDpad(L) : radioMode ? stickDpad : Vector2.zero;
+            if (radioMode) stick = Vector2.zero;
+            if (radioDpad != Vector2.zero && _prevRadioDpad == Vector2.zero)
             {
-                stick = Vector2.zero;
-                if (dpad != Vector2.zero && _prevRadioDpad == Vector2.zero)
-                {
-                    __instance.radioPressed = true;
-                    __instance.radioInput = MirrorMode.mirrored ? new Vector2(-dpad.x, dpad.y) : dpad;
-                }
+                __instance.radioPressed = true;
+                __instance.radioInput = MirrorMode.mirrored ? new Vector2(-radioDpad.x, radioDpad.y) : radioDpad;
             }
-            _prevRadioDpad = radioMode ? dpad : Vector2.zero;
+            _prevRadioDpad = radioDpad;
 
             float steer = stick.x;
             if (MirrorMode.mirrored) { steer = -steer; }
@@ -72,7 +72,7 @@ namespace EasyDeliveryVR.Patches
             __instance.driveInput = Combine(__instance.driveInput, new Vector2(steer, throttle));
             __instance.playerInput = Combine(__instance.playerInput, MirrorMode.mirrored && !PauseSystem.paused ? new Vector2(-stick.x, stick.y) : stick);
             // radioInput drives step-by-step menu navigation (one step per change), so it must be d-pad-like.
-            if (!radioMode) __instance.radioInput = Combine(__instance.radioInput, dpad);
+            if (!radioMode) __instance.radioInput = Combine(__instance.radioInput, frame ? Combine(stickDpad, radioDpad) : stickDpad);
             __instance.cameraLook = Combine(__instance.cameraLook, Dz(R.Stick));
             // On foot the mod turns the body itself (snap/smooth); the game's per-frame stick turn would double it.
             if (Rendering.VrCameraManager.Mode == Rendering.VrCameraManager.ViewMode.OnFoot)
@@ -80,14 +80,28 @@ namespace EasyDeliveryVR.Patches
             if (!Ui.VrLaser.HasHit)
                 __instance.mouseInput = Combine(__instance.mouseInput, Dz(R.Stick)); // stick cursor fallback
 
-            __instance.selectPressed |= VrControllers.Pressed(R.Primary, pR.Primary);
-            __instance.selectReleased |= VrControllers.Pressed(pR.Primary, R.Primary);
             if (PauseSystem.paused)
             {
                 // Right trigger clicks while a menu is open (it's the throttle otherwise).
                 __instance.selectPressed |= R.Trigger > 0.6f && pR.Trigger <= 0.6f;
                 __instance.selectReleased |= R.Trigger < 0.4f && pR.Trigger >= 0.4f;
             }
+            if (frame) MergeFrameButtons(__instance);
+            else MergeTouchButtons(__instance);
+            if (!Rendering.VrCameraManager.ConsumeCameraButton)
+                __instance.cameraPressed |= VrControllers.CameraTapped;
+        }
+
+        /// <summary>Touch (and Index/Vive): A/B right, X/Y left, the rest on grips and stick clicks.</summary>
+        private static void MergeTouchButtons(sInputManager __instance)
+        {
+            var L = VrControllers.Left;
+            var R = VrControllers.Right;
+            var pL = VrControllers.PrevLeft;
+            var pR = VrControllers.PrevRight;
+
+            __instance.selectPressed |= VrControllers.Pressed(R.Primary, pR.Primary);
+            __instance.selectReleased |= VrControllers.Pressed(pR.Primary, R.Primary);
             __instance.backPressed |= VrControllers.Pressed(R.Secondary, pR.Secondary);
             __instance.backReleased |= VrControllers.Pressed(pR.Secondary, R.Secondary);
             __instance.brakePressed |= R.Secondary;
@@ -105,8 +119,62 @@ namespace EasyDeliveryVR.Patches
                 __instance.hornPressed |= VrControllers.Pressed(R.GripButton, pR.GripButton);
             __instance.headlightsPressed |= VrControllers.LeftClickTapped;
             __instance.resetHeld |= VrControllers.LeftClickHeld;
-            if (!Rendering.VrCameraManager.ConsumeCameraButton)
-                __instance.cameraPressed |= VrControllers.RightClickTapped;
+        }
+
+        /// <summary>
+        /// Steam Frame: the game's own gamepad layout. A/B interact and brake/back (following the game's
+        /// "swap A/B" option), X headlights, Y reset, LB inventory, RB horn, d-pad radio and menus,
+        /// View map (hold: VR settings), Menu pause, left stick click camera. Grips only grab (wheel, items).
+        /// </summary>
+        private static void MergeFrameButtons(sInputManager __instance)
+        {
+            var L = VrControllers.Left;
+            var R = VrControllers.Right;
+            var pL = VrControllers.PrevLeft;
+            var pR = VrControllers.PrevRight;
+
+            FrameAB(__instance, out bool ok, out bool pOk, out bool back, out bool pBack);
+            __instance.selectPressed |= VrControllers.Pressed(ok, pOk);
+            __instance.selectReleased |= VrControllers.Pressed(pOk, ok);
+            __instance.backPressed |= VrControllers.Pressed(back, pBack);
+            __instance.backReleased |= VrControllers.Pressed(pBack, back);
+            __instance.brakePressed |= back;
+            __instance.headlightsPressed |= VrControllers.Pressed(R.West, pR.West);
+            bool reset = VrControllers.Pressed(R.North, pR.North);
+            __instance.resetPressed |= reset;
+            __instance.resetHeld |= reset;
+            __instance.inventoryPressed |= VrControllers.Pressed(L.Bumper, pL.Bumper);
+            __instance.inventoryReleased |= VrControllers.Pressed(pL.Bumper, L.Bumper);
+            __instance.inventoryHeld |= L.Bumper;
+            __instance.hornPressed |= VrControllers.Pressed(R.Bumper, pR.Bumper);
+            __instance.mapPressed |= VrControllers.MenuTapped; // View, on release; holding it opens the VR settings
+            __instance.pausePressed |= VrControllers.Pressed(R.Menu, pR.Menu) || VrControllers.BothClicks
+                                       || (__instance.freeCamMode && VrControllers.Pressed(back, pBack));
+        }
+
+        /// <summary>
+        /// Which Steam Frame button is "ok" and which "back". The game's default action map is "PlayerABSwap"
+        /// (gamepad south = ok); its "swap A/B" option switches to "Player" (east = ok).
+        /// </summary>
+        private static void FrameAB(sInputManager inst, out bool ok, out bool pOk, out bool back, out bool pBack)
+        {
+            var R = VrControllers.Right;
+            var pR = VrControllers.PrevRight;
+            bool southOk = SouthIsOk(inst);
+            ok = southOk ? R.South : R.East;
+            pOk = southOk ? pR.South : pR.East;
+            back = southOk ? R.East : R.South;
+            pBack = southOk ? pR.East : pR.South;
+        }
+
+        /// <summary>The Steam Frame "ok" button is gamepad south unless the game's A/B swap says east.</summary>
+        public static bool FrameSouthIsOk() =>
+            SouthIsOk(sInputManager.players != null && sInputManager.players.Length > 0 ? sInputManager.players[0] : null);
+
+        private static bool SouthIsOk(sInputManager inst)
+        {
+            var map = inst != null && inst.input != null ? inst.input.currentActionMap : null;
+            return map == null || map.name != "Player";
         }
 
         [HarmonyPostfix, HarmonyPatch("GetMenuInput")]
@@ -125,10 +193,25 @@ namespace EasyDeliveryVR.Patches
             b.down |= L.Stick.y < -0.5f;
             b.left |= L.Stick.x < -0.5f;
             b.right |= L.Stick.x > 0.5f;
-            b.a |= R.Primary || R.Trigger > 0.7f;
-            b.b |= R.Secondary;
-            b.start |= L.Menu;
-            b.select |= L.Secondary;
+            if (VrControllers.IsFrame)
+            {
+                FrameAB(__instance, out bool ok, out _, out bool back, out _);
+                b.up |= L.North;
+                b.down |= L.South;
+                b.left |= L.West;
+                b.right |= L.East;
+                b.a |= ok || R.Trigger > 0.7f;
+                b.b |= back;
+                b.start |= R.Menu;
+                b.select |= L.Menu;
+            }
+            else
+            {
+                b.a |= R.Primary || R.Trigger > 0.7f;
+                b.b |= R.Secondary;
+                b.start |= L.Menu;
+                b.select |= L.Secondary;
+            }
 
             var bp = __instance.btnp;
             bp.up = b.up && !pb.up;
