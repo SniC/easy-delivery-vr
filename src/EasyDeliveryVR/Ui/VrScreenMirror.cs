@@ -150,6 +150,10 @@ namespace EasyDeliveryVR.Ui
             {
                 if (_copies.ContainsKey(r)) continue;
                 if (IsWorldView(r)) { _copies[r] = new Copy { Source = r }; continue; }
+                // The sprite layers ("Square", "otherBackdrop") are full-screen dimming backdrops behind menus.
+                // On the monitor they darken the picture; in VR they became a huge gray slab floating next to the
+                // menu, so they're not mirrored. The menu screen has its own background.
+                if (r is SpriteRenderer) { _copies[r] = new Copy { Source = r }; continue; }
 
                 var go = new GameObject("VR_" + r.name) { layer = 0 };
                 go.transform.SetParent(_root, false);
@@ -268,9 +272,6 @@ namespace EasyDeliveryVR.Ui
                 _onHand = menu;
                 var s = menu.localScale;
                 _onHandScale = new Vector3(HandScreenWidth, HandScreenWidth * Mathf.Abs(s.y / (s.x == 0f ? 1f : s.x)), 1f);
-                // The full-view dimming backdrops make no sense behind a hand-held screen.
-                foreach (var c in _copies.Values)
-                    if (c.Target is SpriteRenderer) c.Target.enabled = false;
                 PlaceOnHand();
             }
         }
