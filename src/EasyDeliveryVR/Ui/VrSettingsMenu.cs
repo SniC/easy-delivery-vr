@@ -231,6 +231,9 @@ namespace EasyDeliveryVR.Ui
             bg.transform.localPosition = new Vector3(0f, -0.095f, 0.002f);
             bg.transform.localScale = new Vector3(0.92f, 0.86f, 1f);
             var bgMat = new Material(Shader.Find("Sprites/Default")) { color = new Color(0.05f, 0.05f, 0.06f, 0.96f), renderQueue = 4700 };
+            // One-pixel cut corners like the game's menus: at 1 m a game menu pixel is about 3.4 mm.
+            const float pixel = 0.0034f;
+            bgMat.mainTexture = VrScreenMirror.CutCornerTexture(Mathf.RoundToInt(0.92f / pixel), Mathf.RoundToInt(0.86f / pixel));
             bg.GetComponent<Renderer>().sharedMaterial = bgMat;
 
             var textGo = new GameObject("Text");

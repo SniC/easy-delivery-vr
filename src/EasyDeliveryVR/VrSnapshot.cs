@@ -104,6 +104,12 @@ namespace EasyDeliveryVR
                 else if (cmd == "settings") Ui.VrSettingsMenu.Toggle();
                 else if (cmd == "shaders") DumpShaders();
                 else if (cmd == "perf") Rendering.VrPerf.LogNow(true);
+                else if (cmd == "freecam") // the computer's cam.exe camera mode (a camera switch); pause to leave it
+                {
+                    var cam = FindFirstObjectByType<CamDotExe>(FindObjectsInactive.Include);
+                    if (cam != null) cam.ActivateFreeCam(false); else Plugin.Log.LogInfo("VR: no CamDotExe in this scene");
+                }
+                else if (cmd == "pause") PauseSystem.pauseSystem?.TogglePaused();
                 else if (cmd == "continue") // title screen "continue"
                 {
                     var intro = FindFirstObjectByType<IntroDotExe>(FindObjectsInactive.Include);

@@ -129,12 +129,9 @@ namespace EasyDeliveryVR.Rendering
             foreach (var c in Camera.allCameras)
             {
                 if (c == _cam) continue;
-                // Other cameras (menu/backdrop/minimap) only go to the desktop window. URP ignores stereoTargetEye,
-                // so without allowXRRendering = false a camera without a target texture also renders into both
-                // eyes every frame (the menu camera did: a second full-resolution pass per eye for nothing).
-                c.stereoTargetEye = StereoTargetEyeMask.None;
-                if (c.targetTexture == null && c.TryGetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>(out var other))
-                    other.allowXRRendering = false;
+                c.stereoTargetEye = StereoTargetEyeMask.None; // no effect in URP, kept for the built-in renderer
+                // Cameras without a target texture render into the eyes in URP: make them draw nothing (see QuietOtherCameras).
+                if (c.targetTexture == null && !_quietCams.Contains(c)) _quietCams.Add(c);
             }
             if (_cam.TryGetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>(out var data))
                 data.allowXRRendering = true;
@@ -218,8 +215,27 @@ namespace EasyDeliveryVR.Rendering
             return anchor != null;
         }
 
+        // Other cameras that render to the screen (the menu camera "Camera Persp"). URP ignores stereoTargetEye,
+        // so they render into both eyes too. They must keep doing that: the menu camera is the one XR camera that
+        // survives scene loads and camera switches, and a frame without any XR camera makes SteamVR's OpenXR
+        // session fail for good (xrEndFrame: XR_ERROR_HANDLE_INVALID). So instead they draw nothing and clear
+        // nothing: almost free, and the world camera's image stays.
+        private readonly System.Collections.Generic.List<Camera> _quietCams = new System.Collections.Generic.List<Camera>();
+
+        private void QuietOtherCameras()
+        {
+            for (int i = _quietCams.Count - 1; i >= 0; i--)
+            {
+                var c = _quietCams[i];
+                if (c == null || c == _cam) { _quietCams.RemoveAt(i); continue; }
+                if (c.cullingMask != 0) c.cullingMask = 0; // the game may set these again
+                if (c.clearFlags != CameraClearFlags.Nothing) c.clearFlags = CameraClearFlags.Nothing;
+            }
+        }
+
         private void OnBeforeRender()
         {
+            if (XrRuntime.Running) QuietOtherCameras();
             if (_cam == null || !XrRuntime.Running) return;
             if (!VrInput.TryGetHeadPose(out var pos, out var rot)) return;
 

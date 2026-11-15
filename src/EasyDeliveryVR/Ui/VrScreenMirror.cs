@@ -280,6 +280,22 @@ namespace EasyDeliveryVR.Ui
 
         private Transform _backing;
         private Material _backingMat;
+        private Texture2D _backingTex;
+
+        /// <summary>
+        /// White w x h texture with the four corner pixels transparent, point-filtered: a panel backing with the
+        /// one-pixel cut corners of the game's pixel frames. Size it to the panel in game pixels.
+        /// </summary>
+        internal static Texture2D CutCornerTexture(int w, int h)
+        {
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[w * h];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32(255, 255, 255, 255);
+            foreach (int i in new[] { 0, w - 1, (h - 1) * w, h * w - 1 }) px[i] = new Color32(255, 255, 255, 0);
+            tex.SetPixels32(px);
+            tex.Apply();
+            return tex;
+        }
 
         /// <summary>
         /// The game dims the whole picture behind its menus (the sprite backdrops, not mirrored). In VR a dark
@@ -317,7 +333,20 @@ namespace EasyDeliveryVR.Ui
             if (_backing.parent != menu) _backing.SetParent(menu, false);
             _backing.localPosition = Vector3.zero;
             _backing.localRotation = Quaternion.identity;
-            _backing.localScale = new Vector3(1.08f, 1.1f, 1f); // a margin around the screen
+            const float marginX = 1.08f, marginY = 1.1f; // a margin around the screen
+            _backing.localScale = new Vector3(marginX, marginY, 1f);
+
+            // Cut corners like the game's pixel frames: a texture on the menu's own pixel grid with the
+            // four corner pixels transparent.
+            var rt = VrLaser.Screen != null && VrLaser.Screen.R != null ? VrLaser.Screen.R.rt : null;
+            int w = Mathf.RoundToInt((rt != null ? rt.width : 320) * marginX);
+            int h = Mathf.RoundToInt((rt != null ? rt.height : 256) * marginY);
+            if (_backingTex == null || _backingTex.width != w || _backingTex.height != h)
+            {
+                if (_backingTex != null) Destroy(_backingTex);
+                _backingTex = CutCornerTexture(w, h);
+                _backingMat.mainTexture = _backingTex;
+            }
             _backingMat.color = new Color(dim.r, dim.g, dim.b, Mathf.Clamp01(dim.a * 0.9f));
             if (menuRenderer.sharedMaterial != null) _backingMat.renderQueue = menuRenderer.sharedMaterial.renderQueue - 1;
             _backing.gameObject.SetActive(true);
