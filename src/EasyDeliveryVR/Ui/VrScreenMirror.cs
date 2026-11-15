@@ -274,6 +274,53 @@ namespace EasyDeliveryVR.Ui
                 _onHandScale = new Vector3(HandScreenWidth, HandScreenWidth * Mathf.Abs(s.y / (s.x == 0f ? 1f : s.x)), 1f);
                 PlaceOnHand();
             }
+
+            UpdateMenuBacking(menu);
+        }
+
+        private Transform _backing;
+        private Material _backingMat;
+
+        /// <summary>
+        /// The game dims the whole picture behind its menus (the sprite backdrops, not mirrored). In VR a dark
+        /// panel just behind the menu screen does that job: same color and fade as the game's backdrop, a little
+        /// larger than the screen, and it moves with the screen (also on the left hand).
+        /// </summary>
+        private void UpdateMenuBacking(Transform menu)
+        {
+            // How much the game dims right now: the strongest visible backdrop.
+            Color dim = Color.clear;
+            foreach (var c in _copies.Values)
+                if (c.Source is SpriteRenderer sr && sr.enabled && sr.gameObject.activeInHierarchy && sr.color.a > dim.a)
+                    dim = sr.color;
+
+            Renderer menuRenderer = null;
+            bool show = menu != null && menu.TryGetComponent(out menuRenderer) && menuRenderer.enabled && dim.a > 0.01f;
+            if (!show)
+            {
+                if (_backing != null) _backing.gameObject.SetActive(false);
+                return;
+            }
+
+            if (_backing == null)
+            {
+                var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                go.name = "VR Menu Backing";
+                Destroy(go.GetComponent<Collider>());
+                _backingMat = new Material(Shader.Find("UI/Default"));
+                _backingMat.SetInt("unity_GUIZTestMode", (int)CompareFunction.Always);
+                var r = go.GetComponent<Renderer>();
+                r.sharedMaterial = _backingMat;
+                r.shadowCastingMode = ShadowCastingMode.Off;
+                _backing = go.transform;
+            }
+            if (_backing.parent != menu) _backing.SetParent(menu, false);
+            _backing.localPosition = Vector3.zero;
+            _backing.localRotation = Quaternion.identity;
+            _backing.localScale = new Vector3(1.08f, 1.1f, 1f); // a margin around the screen
+            _backingMat.color = new Color(dim.r, dim.g, dim.b, Mathf.Clamp01(dim.a * 0.9f));
+            if (menuRenderer.sharedMaterial != null) _backingMat.renderQueue = menuRenderer.sharedMaterial.renderQueue - 1;
+            _backing.gameObject.SetActive(true);
         }
 
         private sHUD _hud;
