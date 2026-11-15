@@ -3,6 +3,10 @@
 Player-facing notes per release. `tools/New-Release.ps1` puts the section of the version being released into the
 GitHub release notes, so add a section here before releasing.
 
+## v0.2.4
+
+- Fixed a rare, split-second black flicker of the whole view.
+
 ## v0.2.3
 
 - The dark backing behind menus has plain square corners, the same as the VR settings panel.
