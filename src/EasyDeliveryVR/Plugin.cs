@@ -13,7 +13,7 @@ namespace EasyDeliveryVR
     {
         public const string Guid = "easydeliveryvr";
         public const string Name = "Easy Delivery VR";
-        public const string Version = "0.2.4";
+        public const string Version = "0.3.0";
 
         internal static ManualLogSource Log;
         internal static Plugin Instance;
