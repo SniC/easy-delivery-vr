@@ -103,8 +103,7 @@ namespace EasyDeliveryVR.Rendering
         {
             if (_cached != null && _cached.isActiveAndEnabled && _cached.stereoTargetEye == StereoTargetEyeMask.Both) return _cached;
             _cached = null;
-            foreach (var c in Camera.allCameras)
-                if (c.stereoTargetEye == StereoTargetEyeMask.Both && c.targetTexture == null) { _cached = c; break; }
+            _cached = VrCameraManager.HmdCamera;
             if (_cached == null && _quad != null && _quad.parent != null)
             {
                 _quad.SetParent(null, false);

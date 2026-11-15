@@ -16,6 +16,8 @@ namespace EasyDeliveryVR
         public static ConfigEntry<bool> DebugSnapshots;
         public static ConfigEntry<float> LaserPitch;
         public static ConfigEntry<bool> DebugInput;
+        public static ConfigEntry<bool> LogPerformance;
+        public static ConfigEntry<float> RenderScale;
         public static ConfigEntry<bool> FirstPersonOnFoot;
         public static ConfigEntry<bool> SmoothTurn;
         public static ConfigEntry<float> SnapTurnAngle;
@@ -87,6 +89,10 @@ namespace EasyDeliveryVR
                 "Downward tilt in degrees applied to the laser when the runtime only reports the controller grip pose.");
             DebugInput = cfg.Bind("Debug", "LogInput", false,
                 "Log VR controller values and the truck's received input every 2 s while a control is used.");
+            RenderScale = cfg.Bind("General", "RenderResolution", 1f,
+                "Headset render resolution as a fraction of SteamVR's (0.5 - 1.0). Lower = faster; the game's pixel-art look hides it well.");
+            LogPerformance = cfg.Bind("Debug", "LogPerformance", false,
+                "Log frame rate, frame times and GPU time to the BepInEx log every 5 s.");
             DebugSnapshots = cfg.Bind("Debug", "AutoSnapshots", true,
                 "Save a flat image of the VR view to BepInEx/vr_snapshots 8 s after each scene load (F9 any time). The headset blinks once when it happens.");
         }

@@ -26,6 +26,10 @@ namespace EasyDeliveryVR.Rendering
         public static Transform Anchor { get; private set; }
 
         private Camera _cam;
+
+        /// <summary>The camera rendering the headset view (null until found). Use instead of scanning Camera.allCameras.</summary>
+        public static Camera HmdCamera => _instance != null && _instance._cam != null && _instance._cam.isActiveAndEnabled ? _instance._cam : null;
+        private static VrCameraManager _instance;
         private sCameraController _truckCam;
         private bool _cabForcedThisScene;
 
@@ -35,6 +39,7 @@ namespace EasyDeliveryVR.Rendering
 
         private void OnEnable()
         {
+            _instance = this;
             Application.onBeforeRender += OnBeforeRender;
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
@@ -89,6 +94,13 @@ namespace EasyDeliveryVR.Rendering
         private void Update()
         {
             VrControllers.Update();
+            // Render resolution (VR settings). Changing it reallocates the eye textures, so only on change.
+            float scale = Mathf.Clamp(VrConfig.RenderScale.Value, 0.4f, 1f);
+            if (Mathf.Abs(UnityEngine.XR.XRSettings.eyeTextureResolutionScale - scale) > 0.001f)
+            {
+                UnityEngine.XR.XRSettings.eyeTextureResolutionScale = scale;
+                Plugin.Log.LogInfo($"VR: render resolution {scale * 100:F0}%");
+            }
             var kb = Keyboard.current;
             if ((kb != null && kb.f8Key.wasPressedThisFrame) || VrControllers.RightClickHeld) Recenter();
 
@@ -117,9 +129,15 @@ namespace EasyDeliveryVR.Rendering
             foreach (var c in Camera.allCameras)
             {
                 if (c == _cam) continue;
-                // Other cameras (menu/backdrop/minimap) only go to the desktop window for now.
+                // Other cameras (menu/backdrop/minimap) only go to the desktop window. URP ignores stereoTargetEye,
+                // so without allowXRRendering = false a camera without a target texture also renders into both
+                // eyes every frame (the menu camera did: a second full-resolution pass per eye for nothing).
                 c.stereoTargetEye = StereoTargetEyeMask.None;
+                if (c.targetTexture == null && c.TryGetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>(out var other))
+                    other.allowXRRendering = false;
             }
+            if (_cam.TryGetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>(out var data))
+                data.allowXRRendering = true;
 
             if (_cam.targetTexture != null)
             {

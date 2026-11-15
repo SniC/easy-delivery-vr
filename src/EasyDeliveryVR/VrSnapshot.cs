@@ -103,6 +103,7 @@ namespace EasyDeliveryVR
                 if (cmd == "snapshot") Take("cmd");
                 else if (cmd == "settings") Ui.VrSettingsMenu.Toggle();
                 else if (cmd == "shaders") DumpShaders();
+                else if (cmd == "perf") Rendering.VrPerf.LogNow(true);
                 else if (cmd == "continue") // title screen "continue"
                 {
                     var intro = FindFirstObjectByType<IntroDotExe>(FindObjectsInactive.Include);

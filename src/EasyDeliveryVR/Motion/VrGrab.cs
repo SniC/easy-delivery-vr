@@ -49,7 +49,7 @@ namespace EasyDeliveryVR.Motion
 
             if (Time.unscaledTime >= _nextCandidates)
             {
-                _nextCandidates = Time.unscaledTime + 0.1f;
+                _nextCandidates = Time.unscaledTime + 0.5f; // whole-scene search, so not more often
                 RefreshCandidates();
             }
 

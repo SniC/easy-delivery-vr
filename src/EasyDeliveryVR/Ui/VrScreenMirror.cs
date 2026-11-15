@@ -74,11 +74,8 @@ namespace EasyDeliveryVR.Ui
         public static bool WorldToRtPixel(Texture rt, Vector3 world, out Vector2 px)
         {
             px = new Vector2(-100f, -100f);
-            var head = Camera.main;
-            if (_instance == null || rt == null) return false;
-            foreach (var c in Camera.allCameras)
-                if (c.stereoTargetEye == StereoTargetEyeMask.Both && c.targetTexture == null) { head = c; break; }
-            if (head == null) return false;
+            var head = VrCameraManager.HmdCamera;
+            if (_instance == null || rt == null || head == null) return false;
 
             Transform quad = null;
             foreach (var c in _instance._copies.Values)
@@ -310,9 +307,8 @@ namespace EasyDeliveryVR.Ui
                 || !d.TryGetFeatureValue(UnityEngine.XR.CommonUsages.deviceRotation, out var r)
                 || !VrCameraManager.TrackingToWorld(p, r, out var handPos, out var handRot))
                 return;
-            var head = Camera.main != null ? Camera.main.transform.position : handPos - handRot * Vector3.forward;
-            foreach (var c in Camera.allCameras)
-                if (c.stereoTargetEye == StereoTargetEyeMask.Both && c.targetTexture == null) { head = c.transform.position; break; }
+            var hmd = VrCameraManager.HmdCamera;
+            var head = hmd != null ? hmd.transform.position : handPos - handRot * Vector3.forward;
 
             // Hold it like a tablet: just above and in front of the hand, turned toward the eyes.
             var up = (VrCameraManager.Anchor != null ? VrCameraManager.AnchorRotation : Quaternion.identity) * Vector3.up;

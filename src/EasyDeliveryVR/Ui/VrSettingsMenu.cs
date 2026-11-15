@@ -75,6 +75,7 @@ namespace EasyDeliveryVR.Ui
         {
             AddChoice("Cab tilt (bumps/sway)", VrConfig.CabTilt, new[] { 0f, 0.25f, 0.5f, 1f },
                 v => v <= 0f ? "Level horizon" : v >= 1f ? "Full (rigid)" : $"{v * 100:F0}%");
+            AddChoice("Render resolution", VrConfig.RenderScale, new[] { 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1f }, v => $"{v * 100:F0}%");
             AddChoice("Comfort vignette", VrConfig.Vignette, new[] { 0f, 0.25f, 0.5f, 0.75f, 1f }, v => v <= 0f ? "Off" : $"{v * 100:F0}%");
             AddBool("Turning on foot", VrConfig.SmoothTurn, "Smooth", "Snap");
             AddChoice("Snap turn angle", VrConfig.SnapTurnAngle, new[] { 15f, 22.5f, 30f, 45f, 90f }, v => $"{v:0.#}°");
@@ -177,7 +178,7 @@ namespace EasyDeliveryVR.Ui
         private void Open()
         {
             if (_panel == null) Build();
-            var cam = Camera.allCameras.Length > 0 ? FindHmdCamera() : null;
+            var cam = FindHmdCamera();
             if (cam == null) return;
 
             // In front of the head at 1 m, level, moving along with the truck/player.
@@ -216,12 +217,7 @@ namespace EasyDeliveryVR.Ui
             Plugin.Instance.Config.Save();
         }
 
-        private static Camera FindHmdCamera()
-        {
-            foreach (var c in Camera.allCameras)
-                if (c.stereoTargetEye == StereoTargetEyeMask.Both && c.targetTexture == null) return c;
-            return null;
-        }
+        private static Camera FindHmdCamera() => VrCameraManager.HmdCamera;
 
         private void Build()
         {

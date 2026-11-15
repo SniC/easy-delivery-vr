@@ -46,7 +46,13 @@ namespace EasyDeliveryVR.Motion
         private Vector3 _prevVel;
         private float _nextSearch;
 
-        private void Awake() => _instance = this;
+        private Hand[] _both; // both hands, reused every frame
+
+        private void Awake()
+        {
+            _instance = this;
+            _both = new[] { _l, _r };
+        }
         private void OnEnable() => Application.onBeforeRender += PlaceVisuals;
         private void OnDisable() => Application.onBeforeRender -= PlaceVisuals;
 
@@ -200,7 +206,7 @@ namespace EasyDeliveryVR.Motion
             float delta = 0f;
             if (inCab)
             {
-                foreach (var h in new[] { _l, _r })
+                foreach (var h in _both)
                 {
                     if (!h.Grabbing) continue;
                     var planar = Planar(h.Pos, out _);
@@ -259,7 +265,7 @@ namespace EasyDeliveryVR.Motion
                 && src.TryGetComponent<MeshFilter>(out var srcMf) && srcMf.sharedMesh != null)
             {
                 _skinned = true;
-                foreach (var h in new[] { _l, _r })
+                foreach (var h in _both)
                 {
                     if (h.Visual == null) continue;
                     h.Visual.GetComponent<MeshFilter>().sharedMesh = srcMf.sharedMesh;
@@ -335,7 +341,7 @@ namespace EasyDeliveryVR.Motion
         private void PlaceVisuals()
         {
             bool show = ShowHands;
-            foreach (var h in new[] { _l, _r })
+            foreach (var h in _both)
             {
                 if (h.Visual == null) continue;
                 bool visible = show && h.Tracked;

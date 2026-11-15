@@ -18,12 +18,19 @@ namespace EasyDeliveryVR.Rendering
         private float _nextScan;
         private bool _applied;
 
+        private void OnEnable() => UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+        private void OnDisable() => UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        private void OnSceneLoaded(UnityEngine.SceneManagement.Scene s, UnityEngine.SceneManagement.LoadSceneMode m) =>
+            _nextScan = Mathf.Min(_nextScan, Time.unscaledTime + 1f);
+
         private void Update()
         {
             bool want = !VrConfig.RetroVertexSnap.Value;
             if (want != _applied) { _applied = want; _nextScan = 0f; if (!want) Restore(); }
             if (!want || Time.unscaledTime < _nextScan) return;
-            _nextScan = Time.unscaledTime + 3f; // new materials appear with scene loads and spawned objects
+            // Scanning every loaded material is a noticeable hitch, so: 1 s after each scene load (most new
+            // materials), then every 10 s for objects spawned later.
+            _nextScan = Time.unscaledTime + 10f;
 
             int n = 0;
             foreach (var m in Resources.FindObjectsOfTypeAll<Material>())
