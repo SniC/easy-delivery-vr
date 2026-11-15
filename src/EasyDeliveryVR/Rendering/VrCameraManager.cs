@@ -230,6 +230,9 @@ namespace EasyDeliveryVR.Rendering
                 if (c == null || c == _cam) { _quietCams.RemoveAt(i); continue; }
                 if (c.cullingMask != 0) c.cullingMask = 0; // the game may set these again
                 if (c.clearFlags != CameraClearFlags.Nothing) c.clearFlags = CameraClearFlags.Nothing;
+                // Render before the world camera. With equal depth the order isn't fixed, and when the quiet camera
+                // goes last its never-cleared image replaces the world in the eyes: a black frame now and then.
+                if (_cam != null && c.depth >= _cam.depth) c.depth = _cam.depth - 1f;
             }
         }
 
