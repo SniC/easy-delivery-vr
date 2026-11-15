@@ -166,12 +166,14 @@ namespace EasyDeliveryVR.Xr
             settingsType.GetField("features", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                 .SetValue(settings, arr);
 
-            // Multi-pass: the game's shaders were built without single-pass-instanced stereo variants.
+            // Multi-pass: the game's shaders were built without single-pass-instanced stereo variants
+            // (tested: single-pass shows a white screen in one eye and nothing in the other).
+            const string mode = "MultiPass";
             var renderModeProp = settingsType.GetProperty("renderMode");
             if (renderModeProp != null)
-                renderModeProp.SetValue(settings, Enum.Parse(renderModeProp.PropertyType, "MultiPass"));
+                renderModeProp.SetValue(settings, Enum.Parse(renderModeProp.PropertyType, mode));
 
-            Plugin.Log.LogInfo($"XR: OpenXR settings created with {list.Count} interaction profiles, multi-pass");
+            Plugin.Log.LogInfo($"XR: OpenXR settings created with {list.Count} interaction profiles, {mode}");
         }
 
         private static void LogRuntimeInfo()

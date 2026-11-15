@@ -17,8 +17,7 @@ namespace EasyDeliveryVR
         public static ConfigEntry<float> LaserPitch;
         public static ConfigEntry<bool> DebugInput;
         public static ConfigEntry<bool> LogPerformance;
-        public static ConfigEntry<float> RenderScale;
-        public static ConfigEntry<bool> FirstPersonOnFoot;
+        public static ConfigEntry<float> RenderScale;        public static ConfigEntry<bool> FirstPersonOnFoot;
         public static ConfigEntry<bool> SmoothTurn;
         public static ConfigEntry<float> SnapTurnAngle;
         public static ConfigEntry<float> SmoothTurnSpeed;
