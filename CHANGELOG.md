@@ -3,6 +3,13 @@
 Player-facing notes per release. `tools/New-Release.ps1` puts the section of the version being released into the
 GitHub release notes, so add a section here before releasing.
 
+## v0.3.0
+
+- Steam Frame controllers now use the game's own gamepad layout: A / B interact and back (following the game's
+  swap A/B option), X headlights, Y reset, d-pad for the radio and menus, LB items, RB horn, View for the map
+  (hold for the VR settings), Menu to pause and left stick click to change camera. The in-game controls screen shows
+  these buttons too. Other controllers keep the existing controls.
+
 ## v0.2.4
 
 - Fixed a rare, split-second black flicker of the whole view.
