@@ -8,6 +8,8 @@ GitHub release notes, so add a section here before releasing.
 - Faster: the headset view is no longer rendered twice per eye (the game's menu camera also drew into the headset).
 - Smoother: removed work the mod did every frame, including a scan that could cause a small hitch every few seconds.
 - New "Render resolution" setting (50–100%) in the VR settings for extra performance; the pixel-art look hides it well.
+- Menus and the title screen no longer show a big gray panel floating next to them; instead a dark see-through backing
+  sits right behind the menu (with the game's pixel corners), so it stays readable.
 
 ## v0.2.1
 
